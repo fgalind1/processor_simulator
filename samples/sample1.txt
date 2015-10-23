@@ -27,7 +27,7 @@ ADDI    R10, R10, 4                ; R10 += 1 (A's index)
 ADDI    R11, R11, 4                ; R11 += 1 (B's index)
 ADDI    R12, R12, 4                ; R11 += 1 (C's index)
 
-BLT        R1, R0, MEMORY_LOOP     ; End loop
+BLT     R1, R0, MEMORY_LOOP        ; End loop
 
 ; ---------- Expected Values -----------
 ;          A       B      C
