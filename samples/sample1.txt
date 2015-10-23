@@ -5,55 +5,54 @@
 ;
 
 ; Number of words to process
-LLI		R0, 4					; R0 = 4 (iterations)
+LLI     R0, 4                      ; R0 = 4 (iterations)
 
 ; Initializacion memory
-LLI		R1, 0					; R1 = 0 (index)
-LLI		R10, 64					; A's memory index (0x40)
-LLI		R11, 128				; B's memory index (0x80)
-LLI		R12, 192				; C's memory index (0xC0)
+LLI     R1, 0                      ; R1 = 0 (index)
+LLI     R10, 64                    ; A's memory index (0x40)
+LLI     R11, 128                   ; B's memory index (0x80)
+LLI     R12, 192                   ; C's memory index (0xC0)
 
-MEMORY_LOOP:					; Start loop (for RI=0; R1 < R0; R1++)
-ADDI 	R1, R1, 1				; R1 += 1
+MEMORY_LOOP:                       ; Start loop (for RI=0; R1 < R0; R1++)
+ADDI    R1, R1, 1                  ; R1 += 1
 
-SW		R1, R10, 0 				; A[I] = I
-SLI		R11, 8 					; B[I] = 8
-LW		R13, R11, 0				; R13 = MEM[B[I]]
-ADD 	R14, R1, R13			; R14 = A[I] + B[I]
-SW		R14, R12, 0				; C[I] = R14
+SW      R1, R10, 0                 ; A[I] = I
+SLI     R11, 8                     ; B[I] = 8
+LW      R13, R11, 0                ; R13 = MEM[B[I]]
+ADD     R14, R1, R13               ; R14 = A[I] + B[I]
+SW      R14, R12, 0                ; C[I] = R14
 
 ; Increment array indexes
-ADDI 	R10, R10, 4				; R10 += 1 (A's index)
-ADDI 	R11, R11, 4				; R11 += 1 (B's index)
-ADDI 	R12, R12, 4				; R11 += 1 (C's index)
+ADDI    R10, R10, 4                ; R10 += 1 (A's index)
+ADDI    R11, R11, 4                ; R11 += 1 (B's index)
+ADDI    R12, R12, 4                ; R11 += 1 (C's index)
 
-BLT		R1, R0, MEMORY_LOOP	; End loop
+BLT        R1, R0, MEMORY_LOOP     ; End loop
 
 ; ---------- Expected Values -----------
-;		A       B       C
-;  	   0x40    0x80    0xC0
-; 0x00	1		8		9
-; 0x04	2		8		10
-; 0x08	3		8		11
-; 0x0C	4		8		12
+;          A       B      C
+;         0x40    0x80   0xC0
+;  0x00    1       8      9
+;  0x04    2       8      10
+;  0x08    3       8      11
+;  0x0C    4       8      12
 ; 
 ; --------------------------------------
 
 ; Sum all C's elements
-LLI		R1, 0					; R1 = 0 (index)
-LLI		R12, 192				; C's memory index (0xC0)
-LLI		R15, 0					; Total of C's elements
+LLI     R1, 0                      ; R1 = 0 (index)
+LLI     R12, 192                   ; C's memory index (0xC0)
+LLI     R15, 0                     ; Total of C's elements
 
-PROCESS_LOOP:					; Start loop (for RI=0; R1 < R0; R1++)
-ADDI 	R1, R1, 1				; R1 += 1
+PROCESS_LOOP:                      ; Start loop (for RI=0; R1 < R0; R1++)
+ADDI    R1, R1, 1                  ; R1 += 1
 
-LW		R16, R12, 0 			; R16 = C[I]
-ADD 	R15, R15, R16			; R15 += C[I]
+LW      R16, R12, 0                ; R16 = C[I]
+ADD     R15, R15, R16              ; R15 += C[I]
 
 ; Increment C's index
-ADDI	R12, R12, 4				; R12 += 1 (C's index)
-BLT		R1, R0, PROCESS_LOOP	; Go to LOOP if R1 < R0
-; LOOP end
+ADDI    R12, R12, 4                ; R12 += 1 (C's index)
+BLT     R1, R0, PROCESS_LOOP       ; PROCESS_LOOP end
 
 ; ---------- Expected Values -----------
 ;
