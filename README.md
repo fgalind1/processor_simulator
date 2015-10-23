@@ -1,8 +1,18 @@
 
 # Processor Simulator
 
+ - [Instructions](#instructions)
+   - [Instruction Flow](#instruction-flow)
+   - [Instruction Set](#instruction-set)
+      - [Instruction Formats](#instruction-formats)
+      - [List of Instructions](#list-of-instructions)
+         - [Arithmetic](#list-of-instructions)
+         - [Data Transfer](#data-transfer)
+         - [Control-Flow](#control-flow)
 
-## Instruction Flow
+## Instructions
+
+### Instruction Flow
 
 ```
    Human Readable  - it is the basic instruction in a assembly file) 
@@ -18,9 +28,9 @@
                      execute the instruction accordignly to the definitions
 ```
 
-## Instruction Set
+### Instruction Set
 
-### Instruction Formats
+#### Instruction Formats
 
  The next tables shows the format structure of the instructions accordingly to the different types: `R, I, J`
 
@@ -42,9 +52,9 @@
    - `C` denotes a constant (immediate)
    - `-` denotes that those values do not care
 
-### List of Instructions
+#### List of Instructions
 
-#### Aritmetic Instructions
+##### Aritmetic
  - From Opcode **00**0000 to **00**1111
  
     Syntax     |  Description   | Type | 31              |||||            0 |         Notes              |
@@ -58,7 +68,7 @@ addiu Rd,Rs,C  | Rd = Rs + C    |  I   | 000101 | Rd | Rs | Immediate (16)||| im
 cmp   Rd,Rs,Rt | Rd = Rs <=> Rt |  R   | 000110 | Rd | Rs | Rt  |  -  |  -  | 1 (s<t), 2 (=), 4 (s>t)    |
  
 
-#### Data Transfer Instructions
+##### Data Transfer
  - From Opcode **01**0000 to **01**1111
 
     Syntax     |  Description   | Type | 31              |||||             0 |         Notes           |
@@ -70,7 +80,7 @@ sli   Rd,C     | M[Rd] = C      |  I   | 010011 | Rd | -  | Immediate (16) ||| s
 lui   Rd,C     | Rd = C << 16   |  I   | 010100 | Rd | -  | Immediate (16) ||| load upper immediate    |
 sui   Rd,C     | M[Rd] = C << 16|  I   | 010101 | Rd | -  | Immediate (16) ||| store upper immediate   |
 
-#### Control-flow Instructions 
+##### Control-Flow 
  - From Opcode **10**0000 to **10**1111
  
     Syntax     |   Description   | Type | 31              |||||             0 |          Notes       |
