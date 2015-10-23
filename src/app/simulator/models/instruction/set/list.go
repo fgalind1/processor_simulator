@@ -21,10 +21,11 @@ const (
 	OP_LUI = 0x14
 	OP_SUI = 0x15
 
-	OP_BEQ  = 0x20
-	OP_BNE  = 0x21
-	OP_BLTH = 0x22
-	OP_J    = 0x23
+	OP_BEQ = 0x20
+	OP_BNE = 0x21
+	OP_BLT = 0x22
+	OP_BGT = 0x23
+	OP_J   = 0x24
 )
 
 func Init() Set {
@@ -46,7 +47,8 @@ func Init() Set {
 
 		info.New(OP_BEQ, "beq", info.Control, data.TypeI),
 		info.New(OP_BNE, "bne", info.Control, data.TypeI),
-		info.New(OP_BLTH, "blth", info.Control, data.TypeI),
+		info.New(OP_BLT, "blt", info.Control, data.TypeI),
+		info.New(OP_BGT, "bgt", info.Control, data.TypeI),
 		info.New(OP_J, "j", info.Control, data.TypeJ),
 	}
 }

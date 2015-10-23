@@ -12,9 +12,9 @@ import (
 )
 
 const (
-	RESGITERS_MEMORY_SIZE    = 32 * consts.BYTES_PER_WORD // 32 words
+	REGISTERS_MEMORY_SIZE    = 32 * consts.BYTES_PER_WORD // 32 words
+	INSTRUCTIONS_MEMORY_SIZE = 1 * 1024                   // 1KB
 	DATA_MEMORY_SIZE         = 10 * 1024                  // 10KB
-	INSTRUCTIONS_MEMORY_SIZE = 10 * 1024                  // 10KB
 )
 
 func main() {
@@ -51,7 +51,7 @@ func runAll(c *cli.Context) {
 	}
 
 	// Instanciate processor
-	p, err := processor.New(filename, uint32(INSTRUCTIONS_MEMORY_SIZE), uint32(DATA_MEMORY_SIZE), uint32(RESGITERS_MEMORY_SIZE))
+	p, err := processor.New(filename, uint32(REGISTERS_MEMORY_SIZE), uint32(INSTRUCTIONS_MEMORY_SIZE), uint32(DATA_MEMORY_SIZE))
 	if err != nil {
 		logger.Error(err.Error())
 		os.Exit(1)

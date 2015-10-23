@@ -52,6 +52,11 @@ func New(filename string, registersSize, instructionsSize, dataSize uint32) (*Pr
 		},
 	}
 
+	logger.Print(" => Bytes per word: %d", consts.BYTES_PER_WORD)
+	logger.Print(" => Registers:      %d", registersSize/consts.BYTES_PER_WORD)
+	logger.Print(" => Instr Memory:   %d Bytes", instructionsSize)
+	logger.Print(" => Data Memory:    %d Bytes", dataSize)
+
 	bus := &storagebus.StorageBus{
 		LoadRegister: func(address uint32) uint32 {
 			return p.RegistersMemory().LoadUint32(address * consts.BYTES_PER_WORD)
@@ -62,10 +67,14 @@ func New(filename string, registersSize, instructionsSize, dataSize uint32) (*Pr
 
 		LoadData:  p.DataMemory().LoadUint32,
 		StoreData: p.DataMemory().StoreUint32,
+
+		SetProgramCounter:       p.SetProgramCounter,
+		IncrementProgramCounter: p.IncrementProgramCounter,
 	}
 
 	p.processor.aluUnit = alu.New(bus)
 	p.processor.dataUnit = data.New(bus)
+	p.processor.controlUnit = control.New(bus)
 
 	err := p.loadInstructionsMemory(filename)
 	if err != nil {
@@ -86,7 +95,7 @@ func (this *Processor) loadInstructionsMemory(filename string) error {
 	for _, line := range lines {
 
 		// Split hex value and humand readable comment
-		parts := strings.Split(line, ";")
+		parts := strings.Split(line, "//")
 
 		// Save human readable for debugging purposes
 		if len(parts) > 1 {
@@ -155,6 +164,14 @@ func (this *Processor) ProgramCounter() uint32 {
 	return this.processor.programCounter
 }
 
-func (this *Processor) IncrementProgramCounter() {
-	this.processor.programCounter += consts.BYTES_PER_WORD
+func (this *Processor) SetProgramCounter(value uint32) {
+	this.processor.programCounter = value
+}
+
+func (this *Processor) IncrementProgramCounter(offset int32) {
+	if offset < 0 {
+		this.processor.programCounter -= uint32(offset * -1)
+	} else {
+		this.processor.programCounter += uint32(offset)
+	}
 }

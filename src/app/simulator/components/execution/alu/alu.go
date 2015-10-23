@@ -38,17 +38,17 @@ func (this *Alu) Process(instruction *instruction.Instruction) error {
 func (this *Alu) getOperands(info *info.Info, operands interface{}) (uint32, uint32, uint32, error) {
 
 	var op1, op2, outputAddr uint32
-	switch info.Opcode {
-	case set.OP_ADD, set.OP_ADDU, set.OP_SUB, set.OP_SUBU, set.OP_CMP:
+	switch info.Type {
+	case data.TypeR:
 		op1 = operands.(*data.DataR).RegisterS.ToUint32()
 		op2 = operands.(*data.DataR).RegisterT.ToUint32()
 		outputAddr = operands.(*data.DataR).RegisterD.ToUint32()
-	case set.OP_ADDI, set.OP_ADDIU:
+	case data.TypeI:
 		op1 = operands.(*data.DataI).RegisterS.ToUint32()
 		op2 = operands.(*data.DataI).Immediate.ToUint32()
 		outputAddr = operands.(*data.DataI).RegisterD.ToUint32()
 	default:
-		return 0, 0, 0, errors.New(fmt.Sprintf("Invalid operation to process by Alu unit. Opcode: %d", info.Opcode))
+		return 0, 0, 0, errors.New(fmt.Sprintf("Invalid data type to process by Alu unit. Type: %d", info.Type))
 	}
 	return op1, op2, outputAddr, nil
 }

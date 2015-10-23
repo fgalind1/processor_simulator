@@ -6,6 +6,7 @@ import (
 	"strconv"
 	"strings"
 
+	"app/simulator/consts"
 	"app/simulator/models/instruction/data"
 	"app/simulator/models/instruction/info"
 	"app/simulator/models/instruction/instruction"
@@ -31,21 +32,18 @@ func (this Set) GetInstructionInfoFromOpcode(opcode uint8) (*info.Info, error) {
 	return nil, errors.New(fmt.Sprintf("No instruction was found with name: %d", opcode))
 }
 
-func (this Set) GetInstructionFromString(line string) (*instruction.Instruction, error) {
+func (this Set) GetInstructionFromString(line string, address uint32, labels map[string]uint32) (*instruction.Instruction, error) {
 
-	line = strings.Replace(line, "\t", " ", -1)
-	line = strings.Replace(line, ",", " ", -1)
-	line = strings.TrimSpace(line)
-	items := strings.Split(line, " ")
+	// Clean line and split by items
+	items, err := getItemsFromString(line)
+	if err != nil {
+		return nil, err
+	}
 
 	// Search opcode in the instruction set
 	info, err := this.GetInstructionInfoFromName(items[0])
 	if err != nil {
 		return nil, err
-	}
-
-	if len(items) <= 1 {
-		return nil, errors.New(fmt.Sprintf("Only one operand found in the instruction: %s. Expecting more than one operand", line))
 	}
 
 	// Check all operands (except opcode/operation) is a numeric value
@@ -54,11 +52,17 @@ func (this Set) GetInstructionFromString(line string) (*instruction.Instruction,
 		if strings.TrimSpace(value) == "" {
 			continue
 		}
-		integer, err := strconv.Atoi(strings.Replace(value, "R", "", -1))
-		if err != nil {
-			return nil, errors.New(fmt.Sprintf("Expecting an integer or RX operand and found: %s", value))
+		labelAddress, isLabel := labels[value]
+		if isLabel {
+			offset := computeBranchOffset(labelAddress, address)
+			operands = append(operands, offset)
+		} else {
+			integer, err := strconv.Atoi(strings.Replace(value, "R", "", -1))
+			if err != nil {
+				return nil, errors.New(fmt.Sprintf("Expecting an integer or RX operand and found: %s", value))
+			}
+			operands = append(operands, uint32(integer))
 		}
-		operands = append(operands, uint32(integer))
 	}
 
 	// Get data object from operands
@@ -92,4 +96,23 @@ func (this Set) GetInstructionFromBytes(bytes []byte) (*instruction.Instruction,
 	}
 
 	return instruction.New(info, data), nil
+}
+
+func getItemsFromString(line string) ([]string, error) {
+	line = strings.Replace(line, "\t", " ", -1)
+	line = strings.Replace(line, ",", " ", -1)
+	line = strings.TrimSpace(line)
+	items := strings.Split(line, " ")
+
+	if len(items) <= 1 {
+		return nil, errors.New(fmt.Sprintf("Only one operand found in the instruction: %s. Expecting more than one operand", line))
+	}
+	return items, nil
+}
+
+func computeBranchOffset(labelAddress, instructionAddress uint32) uint32 {
+	offsetAddress := labelAddress - instructionAddress - consts.BYTES_PER_WORD
+	// If offset is negative, offset will be already in Two's complement per uint32 variables
+	// See ref https://golang.org/ref/spec: "...represented using two's complement arithmetic"
+	return offsetAddress >> 2
 }

@@ -32,25 +32,29 @@ func (this *Data) Process(instruction *instruction.Instruction) error {
 
 	switch instruction.Info.Opcode {
 	case set.OP_LW:
-		value := this.Bus().LoadData(rsAddress + immediate)
+		rsValue := this.Bus().LoadRegister(rsAddress)
+		value := this.Bus().LoadData(rsValue + immediate)
 		this.Bus().StoreRegister(rdAddress, value)
 		logger.Print(" => [E]: [R%d(%#02X) = %#08X]", rdAddress, rdAddress*consts.BYTES_PER_WORD, value)
 	case set.OP_SW:
-		value := this.Bus().LoadRegister(rdAddress)
-		this.Bus().StoreData(rsAddress+immediate, value)
-		logger.Print(" => [E]: [MEM(%#02X) = %#08X]", rsAddress+immediate, value)
+		rdValue := this.Bus().LoadRegister(rdAddress)
+		rsValue := this.Bus().LoadRegister(rsAddress)
+		this.Bus().StoreData(rsValue+immediate, rdValue)
+		logger.Print(" => [E]: [MEM(%#02X) = %#08X]", rsValue+immediate, rdValue)
 	case set.OP_LLI:
 		this.Bus().StoreRegister(rdAddress, immediate)
 		logger.Print(" => [E]: [R%d(%#02X) = %#08X]", rdAddress, rdAddress*consts.BYTES_PER_WORD, immediate)
 	case set.OP_SLI:
-		this.Bus().StoreData(rdAddress, immediate)
-		logger.Print(" => [E]: [MEM(%#02X) = %#08X]", rdAddress, immediate)
+		rdValue := this.Bus().LoadRegister(rdAddress)
+		this.Bus().StoreData(rdValue, immediate)
+		logger.Print(" => [E]: [MEM(%#02X) = %#08X]", rdValue, immediate)
 	case set.OP_LUI:
 		this.Bus().StoreRegister(rdAddress, immediate<<16)
 		logger.Print(" => [E]: [R%d(%#02X) = %#08X]", rdAddress, rdAddress*consts.BYTES_PER_WORD, immediate<<16)
 	case set.OP_SUI:
-		this.Bus().StoreData(rdAddress, immediate<<16)
-		logger.Print(" => [E]: [MEM(%#02X) = %#08X]", rdAddress, immediate<<16)
+		rdValue := this.Bus().LoadRegister(rdAddress)
+		this.Bus().StoreData(rdValue, immediate<<16)
+		logger.Print(" => [E]: [MEM(%#02X) = %#08X]", rdValue, immediate<<16)
 	default:
 		return errors.New(fmt.Sprintf("Invalid operation to process by Data unit. Opcode: %d", instruction.Info.Opcode))
 	}

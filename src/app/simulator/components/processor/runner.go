@@ -63,7 +63,7 @@ func (this *Processor) RunNext() int {
 		return consts.INSTRUCTION_FAIL
 	}
 
-	this.IncrementProgramCounter()
+	this.IncrementProgramCounter(consts.BYTES_PER_WORD)
 	logger.Print("")
 	return consts.INSTRUCTION_OK
 }
