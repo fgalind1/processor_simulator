@@ -2,7 +2,11 @@
 # Processor Simulator
 
  - [How-To](#how-to)
-   - [Run a program (all instructions)](#run-a-program-(all-instructions))
+   - [Commands](#commands)
+     - [Run a program (all instructions)](#run-a-program-all-instructions)
+     - [Run a program (step by step)](#run-a-program-step-by-step)
+   - [Debugging](#debugging)
+     - [Registers and/or memory data](#registers-and-or-memory-data)
  - [Instructions](#instructions)
    - [Instruction Flow](#instruction-flow)
    - [Instruction Set](#instruction-set)
@@ -14,13 +18,49 @@
 
 ## How-To
 
-### Run a program (all instructions)
+### Commands
+
+#### Run a program (all instructions)
 
 ```
 run-all <assembly-filename>
 ```
-
 Sample: `run-all samples\sample1.txt`
+
+#### Run a program (step by step)
+
+```
+run-step <assembly-filename>
+```
+Sample: `run-all samples\sample1.txt`
+
+### Debugging
+
+#### Registers and/or memory data
+
+If the program is executed via `run-all`, you will be able to see the final state of the registers and data memory, otherwise via `run-step` you will be able to see the final state of those each step
+
+At the end of `run-all` or each step via `run-step` you will be prompted with the following interactive options:
+
+```
+Press the desired key and then hit [ENTER]...
+ - (R) to see registers memory
+ - (D) to see data memory
+ - (E) to exit and quit
+ - (*) Any other key to continue
+```
+
+If selected `R` or `D`, the data will be displayed in the following format:
+
+```
+           0x00            0x04            0x08            0x0C
+0x00    0x0000000A      0x0010000A      0x000C0000      0x00000000
+0x10    0x000100E8      0x00000008      0x00000012      0x00000087
+0x20    0x0000FF00      0x00000000      0x00D00068      0x002000A8
+0x30    0x000000E8      0x0000C008      0x00000012      0x00000087
+0x40    0x00000012      0x00000000      0x00100000      0x00000000
+....
+```
 
 ## Instructions
 
