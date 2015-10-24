@@ -32,7 +32,7 @@ Sample: `run-all samples\sample1.txt`
 ```
 run-step <assembly-filename>
 ```
-Sample: `run-all samples\sample1.txt`
+Sample: `run-step samples\sample1.txt`
 
 ### Debugging
 
