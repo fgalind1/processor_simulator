@@ -1,6 +1,8 @@
 
 # Processor Simulator
 
+ - [How-To](#how-to)
+   - [Run a program (all instructions)](#run-a-program-(all-instructions))
  - [Instructions](#instructions)
    - [Instruction Flow](#instruction-flow)
    - [Instruction Set](#instruction-set)
@@ -9,6 +11,16 @@
          - [Arithmetic](#list-of-instructions)
          - [Data Transfer](#data-transfer)
          - [Control-Flow](#control-flow)
+
+## How-To
+
+### Run a program (all instructions)
+
+```
+run-all <assembly-filename>
+```
+
+Sample: `run-all samples\sample1.txt`
 
 ## Instructions
 
