@@ -1,11 +1,11 @@
 ;
-; Example of filling two 4x1 arrays (A & B)
-; Filling C 4x1 array with the output from A + B
+; Example of filling two 10x1 arrays (A & B)
+; Filling C 10x1 array with the output from A + B
 ; Sum all C elements of the array in to R15
 ;
 
 ; Number of words to process
-LLI     R0, 4                      ; R0 = 4 (iterations)
+LLI     R0, 10                     ; R0 = 10(iterations)
 
 ; Initializacion memory
 LLI     R1, 0                      ; R1 = 0 (index)
@@ -36,6 +36,12 @@ BLT     R1, R0, MEMORY_LOOP        ; End loop
 ;  0x04    2       8      10
 ;  0x08    3       8      11
 ;  0x0C    4       8      12
+;  0x10    5       8      13
+;  0x14    6       8      14
+;  0x18    7       8      15
+;  0x1C    8       8      16
+;  0x20    9       8      17
+;  0x24   10       8      18
 ; 
 ; --------------------------------------
 
@@ -56,7 +62,7 @@ BLT     R1, R0, PROCESS_LOOP       ; PROCESS_LOOP end
 
 ; ---------- Expected Values -----------
 ;
-;     R15 = 9 + 10 + 11 + 12 = 42
-;     R15 = 0x2A
+;     R15 = 9 + 10 + 11 + 12 + 13 + 14 + 15 + 16 + 17 + 18 = 135
+;     R15 = 0x87
 ; 
 ; --------------------------------------
