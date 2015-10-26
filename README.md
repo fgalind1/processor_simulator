@@ -26,8 +26,8 @@
 ```
 run <assembly-filename>
     [-s, --step-by-step](bool)        (run interactively step by step. default: false)
-    [-d, --data-memory](string)       (the filename where to save the data memory once the program has finished)
-    [-r, --registers-memory](string)  (the filename where to save the registers memory once the program has finished)
+    [-d, --data-memory](string)       (filename where to save data memory once the program has finished)
+    [-r, --registers-memory](string)  (filename where to save registers memory once the program has finished)
 ```
 Sample: `run samples/sample.txt --step-by-step --data-memory samples/sample.dat --registers-memory samples/sample.reg`
 
