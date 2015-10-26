@@ -3,8 +3,7 @@
 
  - [How-To](#how-to)
    - [Commands](#commands)
-     - [Run a program (all instructions)](#run-a-program-all-instructions)
-     - [Run a program (step by step)](#run-a-program-step-by-step)
+     - [Run a program](#run-a-program)
    - [Debugging](#debugging)
      - [Registers and/or memory data](#registers-and-or-memory-data)
  - [Instructions](#instructions)
@@ -20,27 +19,23 @@
 
 ### Commands
 
-#### Run a program (all instructions)
+#### Run a program
 
 ```
-run-all <assembly-filename>
+run <assembly-filename>
+    [-s, --step-by-step](bool)        (run interactively step by step. default: false)
+    [-d, --data-memory](string)       (the filename where to save the data memory once the program has finished)
+    [-r, --registers-memory](string)  (the filename where to save the registers memory once the program has finished)
 ```
-Sample: `run-all samples\sample1.txt`
-
-#### Run a program (step by step)
-
-```
-run-step <assembly-filename>
-```
-Sample: `run-step samples\sample1.txt`
+Sample: `run samples\sample1.txt --step-by-step --data-memory samples\sample1.dat --registers-memory samples\sample1.reg`
 
 ### Debugging
 
 #### Registers and/or memory data
 
-If the program is executed via `run-all`, you will be able to see the final state of the registers and data memory, otherwise via `run-step` you will be able to see the final state of those each step
+If the program is executed using the flag `-s` or `--step-by-step` you will be able to see the state of registers and/or data memory at the end of every step executed otherwise if the flag is not provided you will be able to see the final state at the end.
 
-At the end of `run-all` or each step via `run-step` you will be prompted with the following interactive options:
+The following menu will be presented:
 
 ```
 Press the desired key and then hit [ENTER]...
@@ -61,6 +56,8 @@ If selected `R` or `D`, the data will be displayed in the following format:
 0x40    0x00000012      0x00000000      0x00100000      0x00000000
 ....
 ```
+
+This format applies also if the flags for saving the memory into files by using  `--data-memory` or `--registers-memory`
 
 ## Instructions
 

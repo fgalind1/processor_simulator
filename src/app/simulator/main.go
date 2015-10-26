@@ -3,7 +3,9 @@ package main
 import (
 	"errors"
 	"fmt"
+	"io/ioutil"
 	"os"
+	"path/filepath"
 
 	"github.com/codegangsta/cli"
 
@@ -28,51 +30,47 @@ func main() {
 	app.Email = "felipegs01@gmail.com"
 	app.Commands = []cli.Command{
 		{
-			Name:        "run-all",
-			Usage:       "run-all <assembly-filename>",
+			Name:        "run",
+			Usage:       "run <assembly-filename>",
 			Description: "translate assembly file and run all instructions of an specified assembly program",
-			Action:      runAll,
-		},
-		{
-			Name:        "run-step",
-			Usage:       "run-step <assembly-filename>",
-			Description: "translate assembly file and run instructions interactively step by step",
-			Action:      runStep,
+			Action:      runCommand,
+			Flags: []cli.Flag{
+				cli.BoolFlag{
+					Name:  "s, step-by-step",
+					Usage: "Run interactively step by step",
+				},
+				cli.StringFlag{
+					Name:  "d, data-memory",
+					Value: "",
+					Usage: "The filename where to save the data memory once the program has finished",
+				},
+				cli.StringFlag{
+					Name:  "r, registers-memory",
+					Value: "",
+					Usage: "The filename where to save the registers memory once the program has finished",
+				},
+			},
 		},
 	}
 
 	app.Run(os.Args)
 }
 
-func runAll(c *cli.Context) {
+func runCommand(c *cli.Context) {
 
 	if len(c.Args()) != 1 {
 		logger.Error("Expecting <assembly-filename> and got %d parameters", len(c.Args()))
 		os.Exit(1)
 	}
 
-	err := runProgram(c.Args()[0], false)
+	err := runProgram(c.Args()[0], c.Bool("step-by-step"), c.String("data-memory"), c.String("registers-memory"))
 	if err != nil {
 		logger.Error(err.Error())
 		os.Exit(1)
 	}
 }
 
-func runStep(c *cli.Context) {
-
-	if len(c.Args()) != 1 {
-		logger.Error("Expecting <assembly-filename> and got %d parameters", len(c.Args()))
-		os.Exit(1)
-	}
-
-	err := runProgram(c.Args()[0], true)
-	if err != nil {
-		logger.Error(err.Error())
-		os.Exit(1)
-	}
-}
-
-func runProgram(assemblyFilename string, interactive bool) error {
+func runProgram(assemblyFilename string, interactive bool, dataFile, registersFile string) error {
 
 	// Translate assembly file to hex file
 	hexFilename, err := translator.TranslateFromFile(assemblyFilename)
@@ -86,6 +84,7 @@ func runProgram(assemblyFilename string, interactive bool) error {
 		return err
 	}
 
+	// Run as many instructions as they are
 	for {
 		result := p.RunNext()
 		if result == consts.INSTRUCTION_FAIL {
@@ -94,32 +93,61 @@ func runProgram(assemblyFilename string, interactive bool) error {
 			break
 		}
 		if interactive {
-			for runInteractiveStep(p) {
+			for runInteractiveStep(p, true) {
 			}
 		}
 	}
-	runInteractiveStep(p)
+
+	// Ask at the end to see the last state of the memory (if desired)
+	runInteractiveStep(p, false)
+
+	// Save memory (if selected)
+	if dataFile != "" {
+		dataFile, _ = filepath.Abs(dataFile)
+		err = ioutil.WriteFile(dataFile, []byte(p.DataMemory().ToString()), 0644)
+		logger.Print(" => Data memory saved at %s", dataFile)
+		if err != nil {
+			return err
+		}
+	}
+
+	if registersFile != "" {
+		registersFile, _ = filepath.Abs(registersFile)
+		err = ioutil.WriteFile(registersFile, []byte(p.RegistersMemory().ToString()), 0644)
+		logger.Print(" => Registers memory saved at %s", dataFile)
+		if err != nil {
+			return err
+		}
+	}
 	return nil
 }
 
-func runInteractiveStep(p *processor.Processor) bool {
-	fmt.Printf("Press the desired key and then hit [ENTER]...\n")
-	fmt.Printf(" - (R) to see registers memory\n")
-	fmt.Printf(" - (D) to see data memory\n")
-	fmt.Printf(" - (E) to exit and quit\n")
-	fmt.Printf(" - (*) Any other key to continue to the next step\n")
-	fmt.Printf("Option: ")
+func runInteractiveStep(p *processor.Processor, showExit bool) bool {
+	logger.Print("Press the desired key and then hit [ENTER]...")
+	logger.Print(" - (R) to see registers memory")
+	logger.Print(" - (D) to see data memory")
+	if showExit {
+		logger.Print(" - (E) to exit and quit")
+	}
+	logger.Print(" - (*) Any other key to continue...")
+	fmt.Print("Option: ")
 
 	var option string
 	fmt.Scan(&option)
 
 	switch option {
 	case "R", "r":
-		fmt.Printf(p.RegistersMemory().ToString())
+		logger.Print(p.RegistersMemory().ToString())
+		logger.Print("--------------------------------------------")
 	case "D", "d":
-		fmt.Printf(p.DataMemory().ToString())
+		logger.Print(p.DataMemory().ToString())
+		logger.Print("--------------------------------------------")
 	case "E", "e":
-		os.Exit(0)
+		if showExit {
+			os.Exit(0)
+		} else {
+			return false
+		}
 	default:
 		return false
 	}
