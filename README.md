@@ -7,6 +7,7 @@
    - [Debugging](#debugging)
      - [Registers and/or memory data](#registers-and-or-memory-data)
  - [Registers](#registers)
+ - [Architecture](#architecture)
    - [Status Register](#status-register)
  - [Instructions](#instructions)
    - [Instruction Flow](#instruction-flow)
@@ -60,6 +61,17 @@ If selected `R` or `D`, the data will be displayed in the following format:
 ```
 
 This format applies also if the flags for saving the memory into files by using  `--data-memory` or `--registers-memory`
+
+## Architecture
+
+The current pipeline architecture is based on a 3-stages pipeline:
+ * Fetch
+ * Decode
+ * Execute
+ 
+The following diagram shows the components of the architecture along with the pipeline and the interaction with its components:
+
+![Processor architecture](/img/architecture.png)
 
 ## Registers
 
