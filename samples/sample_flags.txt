@@ -1,0 +1,77 @@
+;
+; Example of different flags being tested
+; 
+;  Bit   | Label |  Description   |
+; -------|-------|----------------|
+;  2     |  PF   |  Parity flag   |
+;  6     |  ZF   |  Zero flag     |
+;  7     |  SF   |  Sign flag     |
+;  11    |  OF   |  Overflow flag |
+;
+
+; ---------- Zero Flag -----------
+; ON
+LLI     R1, 10
+LLI     R2, 10 
+SUB 	R3, R1, R2 	  	  			; 0x0000 0000
+; R0 = 0x0000 0044					; zero + parity
+
+; OFF
+LLI     R1, 10
+LLI     R2, 8 
+SUB 	R3, R1, R2  	  			; 0x0000 0002
+; R0 = 0x0000 0004					; parity
+
+
+; ---------- Parity Flag -----------
+; ON
+LLI     R1, 5
+LLI     R2, 3 
+ADD 	R3, R1, R2 	  				; 0x0000 0008
+; R0 = 0x0000 0004					; parity
+
+; OFF
+LLI     R1, 5
+LLI     R2, 2 
+ADD 	R3, R1, R2 					; 0x0000 0007
+; R0 = 0x0000 0000 					; none
+
+
+; ---------- Parity Flag -----------
+; ON
+LLI     R1, 16
+LLI     R2, 32
+SUB 	R3, R1, R2 					; 0x0000 0010
+; R0 = 0x0000 0084 					; parity + sign
+
+; OFF
+LLI     R1, 16
+LLI     R2, 16
+ADD 	R3, R1, R2 	  				; 0x0000 0020
+; R0 = 0x0000 0004					; parity
+
+
+; ---------- Overflow Flag -----------
+; ADD ON
+LUI     R1, 16384					; 0x4000 0000 (0)
+LUI     R2, 16384					; 0x4000 0000 (0)
+ADD 	R3, R1, R2 					; 0x8000 0000 (1)
+; R0 = 0x0000 0884					; ‭parity + sign + overflow
+
+; ADD OFF
+LLI     R1, 16384					; 0x0000 4000 (0)
+LLI     R2, 16384					; 0x0000 4000 (0)
+ADD 	R3, R1, R2 					; 0x0000 8000 (0)
+; R0 = 0x0000 0004					; parity
+
+; SUB ON
+LUI     R1, 16384					; 0x4000 0000 (0)
+LUI     R2, 49152					; 0xC000 0000 (0) (-0x4000 0000)
+SUB 	R3, R1, R2 					; 0x8000 0000 (1)
+; R0 = 0x0000 0884					; ‭parity + sign + overflow
+
+; SUB OFF
+LLI     R1, 32768					; 0x0000 8000 (0)
+LLI     R2, 16384					; 0x0000 4000 (0)
+SUB 	R3, R1, R2 					; 0x0000 4000 (0)
+; R0 = 0x0000 0004					; parity
