@@ -72,8 +72,8 @@ This format applies also if the flags for saving the memory into files by using 
 
 The status register corresponds to register `R0`
 
- Bit     Label    Desciption    |
- ------|-------|----------------|
+ Bit   | Label |  Desciption    |
+-------|-------|----------------|
  0     |  --   |  Not used      |
  1     |  --   |  Not used      |
  2     |  PF   |  Parity flag   |
