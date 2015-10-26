@@ -29,7 +29,7 @@ run <assembly-filename>
     [-d, --data-memory](string)       (the filename where to save the data memory once the program has finished)
     [-r, --registers-memory](string)  (the filename where to save the registers memory once the program has finished)
 ```
-Sample: `run samples\sample1.txt --step-by-step --data-memory samples\sample1.dat --registers-memory samples\sample1.reg`
+Sample: `run samples/sample.txt --step-by-step --data-memory samples/sample.dat --registers-memory samples/sample.reg`
 
 ### Debugging
 
@@ -137,11 +137,11 @@ The status register corresponds to register `R0`
  
     Syntax     |  Description   | Type | 31              |||||            0 |         Notes              |
 ---------------|----------------|------|--------|----|----|-----|-----|-----|----------------------------|
-add   Rd,Rs,Rt | Rd = Rs + Rt   |  R   | 000000 | Rd | Rs | Rt  |  -  |  -  | with overflow              | TBI (Overflow)
+add   Rd,Rs,Rt | Rd = Rs + Rt   |  R   | 000000 | Rd | Rs | Rt  |  -  |  -  | with overflow              |
 addu  Rd,Rs,Rt | Rd = Rs + Rt   |  R   | 000001 | Rd | Rs | Rt  |  -  |  -  | without overflow           |
-sub   Rd,Rs,Rt | Rd = Rs - Rt   |  R   | 000010 | Rd | Rs | Rt  |  -  |  -  | with overflow              | TBI (Overflow)
+sub   Rd,Rs,Rt | Rd = Rs - Rt   |  R   | 000010 | Rd | Rs | Rt  |  -  |  -  | with overflow              |
 subu  Rd,Rs,Rt | Rd = Rs - Rt   |  R   | 000011 | Rd | Rs | Rt  |  -  |  -  | without overflow           |
-addi  Rd,Rs,C  | Rd = Rs + C    |  I   | 000100 | Rd | Rs | Immediate (16)||| immediate with overflow    | TBI (Overflow)
+addi  Rd,Rs,C  | Rd = Rs + C    |  I   | 000100 | Rd | Rs | Immediate (16)||| immediate with overflow    |
 addiu Rd,Rs,C  | Rd = Rs + C    |  I   | 000101 | Rd | Rs | Immediate (16)||| immediate without overflow |
 cmp   Rd,Rs,Rt | Rd = Rs <=> Rt |  R   | 000110 | Rd | Rs | Rt  |  -  |  -  | 1 (s<t), 2 (=), 4 (s>t)    |
  
@@ -167,4 +167,4 @@ beq  Rd,Rs,C   | br on equal     |  I   | 100000 | Rd | Rs | Immediate (16) ||| 
 bne  Rd,Rs,C   | br on not equal |  I   | 100001 | Rd | Rs | Immediate (16) ||| PC = PC + 4 + 4*C    |
 blt  Rd,Rs,C   | br on less      |  I   | 100010 | Rd | Rs | Immediate (16) ||| PC = PC + 4 + 4*C    |
 bgt  Rd,Rs,C   | br on greater   |  I   | 100011 | Rd | Rs | Immediate (16) ||| PC = PC + 4 + 4*C    |
-j    C         | jump to address |  J   | 100100 |        Target (26)     ||||| load upper immediate | TBI
+j    C         | jump to address |  J   | 100100 |        Target (26)     ||||| load upper immediate | (To be implemented)
