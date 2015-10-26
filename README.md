@@ -1,7 +1,7 @@
 
 # Processor Simulator
 
- - [How-To](#how-to)
+ - [Getting Started](#getting-started)
    - [Commands](#commands)
      - [Run a program](#run-a-program)
    - [Debugging](#debugging)
@@ -18,7 +18,7 @@
          - [Data Transfer](#data-transfer)
          - [Control-Flow](#control-flow)
 
-## How-To
+## Getting Started
 
 ### Commands
 
