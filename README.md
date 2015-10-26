@@ -6,6 +6,8 @@
      - [Run a program](#run-a-program)
    - [Debugging](#debugging)
      - [Registers and/or memory data](#registers-and-or-memory-data)
+ - [Registers](#registers)
+   - [Status Register](#status-register)
  - [Instructions](#instructions)
    - [Instruction Flow](#instruction-flow)
    - [Instruction Set](#instruction-set)
@@ -58,6 +60,33 @@ If selected `R` or `D`, the data will be displayed in the following format:
 ```
 
 This format applies also if the flags for saving the memory into files by using  `--data-memory` or `--registers-memory`
+
+## Registers
+
+   Name                 |  Description                      |
+------------------------|-----------------------------------|
+ [R0](#status-register) | Status Register(#status-register) |
+ R1 - R31               | Genral Purpose                    |
+
+### Status Register
+
+The status register corresponds to register `R0`
+
+ Bit     Label    Desciption
+ ------|-------|----------------
+ 0     |  --   |  Not used
+ 1     |  --   |  Not used
+ 2     |  PF   |  Parity flag
+ 3     |  --   |  Not used
+ 4     |  --   |  Not used
+ 5     |  --   |  Not used
+ 6     |  ZF   |  Zero flag
+ 7     |  SF   |  Sign flag
+ 8     |  --   |  Not used
+ 9     |  --   |  Not used
+ 10    |  --   |  Not used
+ 11    |  OF   |  Overflow flag
+ 12-31 |  --   |  Not used
 
 ## Instructions
 
