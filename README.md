@@ -17,6 +17,9 @@
          - [Arithmetic](#list-of-instructions)
          - [Data Transfer](#data-transfer)
          - [Control-Flow](#control-flow)
+ - [Translator](#translator)
+   - [Rules Syntax](#rules-syntax)
+   - [Examples](#examples)
 
 ## Getting Started
 
@@ -180,3 +183,29 @@ bne  Rd,Rs,C   | br on not equal |  I   | 100001 | Rd | Rs | Immediate (16) ||| 
 blt  Rd,Rs,C   | br on less      |  I   | 100010 | Rd | Rs | Immediate (16) ||| PC = PC + 4 + 4*C    |
 bgt  Rd,Rs,C   | br on greater   |  I   | 100011 | Rd | Rs | Immediate (16) ||| PC = PC + 4 + 4*C    |
 j    C         | jump to address |  J   | 100100 |        Target (26)     ||||| load upper immediate | (To be implemented)
+ 
+## Translator
+
+ This application has a builtin translator that converts *human readable assembly* instructions into *machine code*, the available instructions allowed are the ones defined on the previous [instructions](#instructions) section.
+
+### Rules Syntax
+
+  - Only one instruction allowed per line
+  - Comments prefix is `;`
+  - Comments are allowed to be on a single line or after an instruction in the same line
+  - It does not care about the amount of empty spaces or tabs
+  - Branch labels must be on a single line
+  - No instructions allowed to be on the same line where the branch label is declared
+  - Blank lines are allowed
+ 
+### Examples
+```
+; Here are some comments on a new line
+
+ PROCESS_LOOP:                      ; Here is a label followed by an inline comment
+ ADDI    R1, R1, 1                  ; Here is a instruction along with its operands and an inline comment
+                                    ; Here it is an empty line which is allowed followed by an inline comment
+ ADD     R15, R15, R16              ; R15 += C[I]
+ BLT     R1, R20, PROCESS_LOOP      ; Here is an instruction using a branch label followed by an inline comment
+ ```
+ 
