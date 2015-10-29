@@ -81,7 +81,7 @@ The following diagram shows the components of the architecture along with the pi
    Name                 |  Description                        |
 ------------------------|-------------------------------------|
  [R0](#status-register) | [Status Register](#status-register) |
- R1 - R31               | Genral Purpose                      |
+ R1 - R31               | General Purpose                      |
 
 ### Status Register
 
