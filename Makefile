@@ -1,3 +1,17 @@
+#
+# This project is developed using the open source Go language
+# and it can be compilated on a windows, linux or macosx system
+#
+# Make sure go tools directory (C:/Go/bin or /usr/local/go/bin) is included in the $PATH environment variable
+# and $GOROOT is pointing to the go directory (C:/Go or /usr/local/go)
+#
+# Download Go from https://golang.org/dl/ if not available
+#
+# A pre-compiled binary for windows and linux is available at /bin/win_amd64 and /bin/linux_386
+#
+# Enjoy :)
+#
+
 APP_DIR=${CURDIR}
 APP_BIN:=bin
 APP_SRC:=src
