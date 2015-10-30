@@ -5,7 +5,7 @@
 ; Input factorial
 LLI     R10, 7                    ; Factorial of 7
 
-; function Factorial (R10) R11 {
+; function factorial (R10) R11 {
 
 LLI     R12, 1                    ; Temporal register equal to 1
 ADD     R11, R10, 0               ; Output starting equal to R10
@@ -22,7 +22,7 @@ BGT     R10, R12, FACTORIAL       ; Recursively call factorial function if R20 >
 
 ; -------------------- Output -------------------------
 ;
-; R11 = Factorial (R10)
+; R11 = factorial (R10)
 ; e.g:  7! = 7 x 6 x 5 x 4 x 3 x 2 x 1 = 5040 = 13B0
 ;
 ; -----------------------------------------------------

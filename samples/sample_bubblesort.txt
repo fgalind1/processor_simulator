@@ -1,0 +1,98 @@
+;
+; Example of bubble sort algorithm
+;
+
+; -----------------------------------------------------
+;    Input  = [ 9, 13, 35, 10, 7, 24, 12, 6, 21, 15]
+;    Output = [ 6, 7, 9, 10, 12, 13, 15, 21, 24, 35]
+; -----------------------------------------------------
+
+LLI    R10, 32                        ; array address
+LLI    R11, 10                        ; array lenght
+
+; Fill array non-ordered array
+ADD    R12, R10, 0                    ; temp = address
+
+SLI    R12, 9
+ADDI   R12, R12, 4
+SLI    R12, 13
+ADDI   R12, R12, 4
+SLI    R12, 35
+ADDI   R12, R12, 4
+SLI    R12, 10
+ADDI   R12, R12, 4
+SLI    R12, 7
+ADDI   R12, R12, 4
+SLI    R12, 24
+ADDI   R12, R12, 4
+SLI    R12, 12
+ADDI   R12, R12, 4
+SLI    R12, 6
+ADDI   R12, R12, 4
+SLI    R12, 21
+ADDI   R12, R12, 4
+SLI    R12, 15
+
+; -----------------------------------------------------
+;             Function bubbleSort(array, lengt)
+; -----------------------------------------------------
+;   - Input values (R10(arrayAddress), R11(lenght))
+;   - Constant values (R21 = 1)
+;   - Temporal registers (R2 - R7)
+; -----------------------------------------------------
+
+; function bubbleSort(R10(arrayAddress), R11(lenght) {
+
+LLI    R21, 1                       ; R21 = 1 (constant)
+LLI    R3, 1                        ; swapped = true
+ADDI   R2, R11, 0                   ; i += lenght
+
+; for(R2(i) = lenght - 1; i > 0 && swapped; i--) {
+
+    FOR_I:
+
+    SUB    R2, R2, R21              ; i = i - 1
+    BLT    R2, R21, END_FOR_I       ; continue if i >= 1, break if i < 1
+    BNE    R3, R21, END_FOR_I       ; continue if swapped = true
+    
+    ; Start instructions
+    LLI    R3, 0                    ; swapped = false
+    LLI    R4, 0                    ; j = 0
+    ADDI   R5, R10, 0               ; R5 = address of index 0
+
+    ; for(R4(j) = 0; j < i; j++) {
+
+        FOR_J:
+        BEQ    R2, R4, END_FOR_J    ; continue if j < i
+
+        ; Start instructions
+        LW     R6, R5, 0            ; R6 = data[j]
+        LW     R7, R5, 4            ; R6 = data[j+1]
+
+        ; if (data[j] > data[j+1]) {
+
+            BGT    R6, R7, DO_SWAP  ; swap if data[j] > data[i+1]
+            J      END_IF_SWAP      ; break from if
+
+            DO_SWAP:
+            ; Start instructions
+            SW     R7, R5, 0        ; data[j] = data[j+1]
+            SW     R6, R5, 4        ; data[j+1] = data[j]
+            LLI    R3, 1            ; swapped = true
+        ; }    
+        END_IF_SWAP:
+
+        ADDI   R4, R4, 1            ; j = j + 1
+        ADDI   R5, R5, 4            ; address += 4 bytes
+
+        J      FOR_J
+    ; }
+    END_FOR_J:
+
+    J      FOR_I
+; }
+END_FOR_I:
+
+; -----------------------------------------------------
+;        End function bubbleSort(array, lengt)
+; -----------------------------------------------------
