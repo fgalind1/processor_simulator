@@ -54,8 +54,13 @@ func (this Set) GetInstructionFromString(line string, address uint32, labels map
 		}
 		labelAddress, isLabel := labels[value]
 		if isLabel {
-			offset := computeBranchOffset(labelAddress, address)
-			operands = append(operands, offset)
+			if info.Type == data.TypeJ {
+				offset := computeBranchAddress(labelAddress)
+				operands = append(operands, offset)
+			} else {
+				offset := computeBranchOffset(labelAddress, address)
+				operands = append(operands, offset)
+			}
 		} else {
 			integer, err := strconv.Atoi(strings.Replace(value, "R", "", -1))
 			if err != nil {
@@ -115,4 +120,8 @@ func computeBranchOffset(labelAddress, instructionAddress uint32) uint32 {
 	// If offset is negative, offset will be already in Two's complement per uint32 variables
 	// See ref https://golang.org/ref/spec: "...represented using two's complement arithmetic"
 	return offsetAddress >> 2
+}
+
+func computeBranchAddress(labelAddress uint32) uint32 {
+	return labelAddress >> 2
 }

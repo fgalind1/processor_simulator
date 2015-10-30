@@ -159,6 +159,7 @@ subu  Rd,Rs,Rt | Rd = Rs - Rt   |  R   | 000011 | Rd | Rs | Rt  |  -  |  -  | wi
 addi  Rd,Rs,C  | Rd = Rs + C    |  I   | 000100 | Rd | Rs | Immediate (16)||| immediate with overflow    |
 addiu Rd,Rs,C  | Rd = Rs + C    |  I   | 000101 | Rd | Rs | Immediate (16)||| immediate without overflow |
 cmp   Rd,Rs,Rt | Rd = Rs <=> Rt |  R   | 000110 | Rd | Rs | Rt  |  -  |  -  | 1 s<t, 2 =, 4 s>t          |
+mul   Rd,Rs,Rt | Rd = Rs * Rt   |  R   | 000111 | Rd | Rs | Rt  |  -  |  -  | without overflow           |
  
 
 ##### Data Transfer
@@ -182,6 +183,7 @@ beq  Rd,Rs,C   | br on equal     |  I   | 100000 | Rd | Rs | Immediate (16) ||| 
 bne  Rd,Rs,C   | br on not equal |  I   | 100001 | Rd | Rs | Immediate (16) ||| PC = PC + 4 + 4*C    |
 blt  Rd,Rs,C   | br on less      |  I   | 100010 | Rd | Rs | Immediate (16) ||| PC = PC + 4 + 4*C    |
 bgt  Rd,Rs,C   | br on greater   |  I   | 100011 | Rd | Rs | Immediate (16) ||| PC = PC + 4 + 4*C    |
+j    C         | jump to C       |  I   | 100100 | C Address (26)           ||| PC = 4*C             |
  
 ## Translator
 

@@ -52,6 +52,12 @@ func (this *Control) Process(instruction *instruction.Instruction) error {
 			this.Bus().IncrementProgramCounter(offsetAddress)
 			logger.Print(" => [E]: [PC(offset) = %d]", offsetAddress)
 		}
+	case data.TypeJ:
+		// Transform address from N instructions domain to N bytes domain (2 bytes per instruction)
+		address := operands.(*data.DataJ).Address.ToUint32() << 2
+		// Decrement 4 bytes so the automatic +4 process set the desired address
+		this.Bus().SetProgramCounter(address - 4)
+		logger.Print(" => [E]: [Address = %06X]", address)
 	default:
 		return errors.New(fmt.Sprintf("Invalid data type to process by Control unit. Type: %d", info.Type))
 	}

@@ -13,6 +13,7 @@ const (
 	OP_ADDI  = 0x04
 	OP_ADDIU = 0x05
 	OP_CMP   = 0x06
+	OP_MUL   = 0x07
 
 	OP_LW  = 0x10
 	OP_SW  = 0x11
@@ -37,6 +38,7 @@ func Init() Set {
 		info.New(OP_ADDI, "addi", info.Aritmetic, data.TypeI),
 		info.New(OP_ADDIU, "addiu", info.Aritmetic, data.TypeR),
 		info.New(OP_CMP, "cmp", info.Aritmetic, data.TypeR),
+		info.New(OP_MUL, "mul", info.Aritmetic, data.TypeR),
 
 		info.New(OP_LW, "lw", info.Data, data.TypeI),
 		info.New(OP_SW, "sw", info.Data, data.TypeI),

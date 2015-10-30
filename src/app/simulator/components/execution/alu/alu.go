@@ -131,6 +131,10 @@ func (this *Alu) compute(info *info.Info, operands interface{}) (uint32, error) 
 		} else {
 			this.SetResult(4)
 		}
+	case set.OP_MUL:
+		value1 := this.Bus().LoadRegister(op1)
+		value2 := this.Bus().LoadRegister(op2)
+		this.SetResult(value1 * value2)
 	default:
 		return 0, errors.New(fmt.Sprintf("Invalid operation to process by Alu unit. Opcode: %d", info.Opcode))
 	}
