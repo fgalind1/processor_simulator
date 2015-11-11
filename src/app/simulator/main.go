@@ -1,11 +1,11 @@
 package main
 
 import (
-	"errors"
 	"fmt"
 	"io/ioutil"
 	"os"
 	"path/filepath"
+	"time"
 
 	"github.com/codegangsta/cli"
 
@@ -84,19 +84,25 @@ func runProgram(assemblyFilename string, interactive bool, dataFile, registersFi
 		return err
 	}
 
+	// Start simulation
+	p.Start()
+
 	// Run as many instructions as they are
-	for {
-		result := p.RunNext()
-		if result == consts.INSTRUCTION_FAIL {
-			return errors.New("Executing instruction failed")
-		} else if result == consts.INSTRUCTION_REACHED_END {
-			break
-		}
+	result := consts.PROGRAM_RUNNING
+	for result == consts.PROGRAM_RUNNING {
 		if interactive {
 			for runInteractiveStep(p, true) {
 			}
+		} else {
+			time.Sleep(consts.STEP_PERIOD)
 		}
+		// Execute next cycle
+		result = p.NextCycle()
 	}
+
+	// Print stats
+	logger.Print(p.Stats())
+	logger.Print(p.PipelineFlow())
 
 	// Ask at the end to see the last state of the memory (if desired)
 	runInteractiveStep(p, false)
@@ -123,6 +129,10 @@ func runProgram(assemblyFilename string, interactive bool, dataFile, registersFi
 }
 
 func runInteractiveStep(p *processor.Processor, showExit bool) bool {
+	// Small sleep to allow pipeline stages messages to be printed first in console
+	time.Sleep(consts.MENU_DELAY)
+
+	// Display menu
 	logger.Print("Press the desired key and then hit [ENTER]...")
 	logger.Print(" - (R) to see registers memory")
 	logger.Print(" - (D) to see data memory")

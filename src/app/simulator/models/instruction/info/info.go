@@ -31,5 +31,5 @@ func New(opcode uint8, name string, category CategoryEnum, datatype data.TypeEnu
 }
 
 func (this Info) ToString() string {
-	return fmt.Sprintf("[Op = %d, Name = %s, Cat = %v, Type = %v ]", this.Opcode, this.Name, this.Category, this.Type)
+	return fmt.Sprintf("[%s - %v - %v]", this.Name, this.Category, this.Type)
 }

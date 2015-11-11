@@ -22,6 +22,14 @@ type Processor struct {
 }
 
 type processor struct {
+	// internals
+	cycles               uint32
+	instructionsExecuted uint32
+	fetchState           bool
+	decodeState          bool
+	executeState         bool
+	dataLog              map[string][]uint32
+
 	// metadata
 	instructionsMap map[uint32]string
 	instructionsSet set.Set
@@ -42,6 +50,13 @@ func New(filename string, registersSize, instructionsSize, dataSize uint32) (*Pr
 
 	p := &Processor{
 		&processor{
+			cycles:               0,
+			instructionsExecuted: 0,
+			fetchState:           consts.ACTIVE,
+			decodeState:          consts.ACTIVE,
+			executeState:         consts.ACTIVE,
+			dataLog:              map[string][]uint32{},
+
 			instructionsMap: map[uint32]string{},
 			instructionsSet: set.Init(),
 
@@ -117,6 +132,30 @@ func (this *Processor) loadInstructionsMemory(filename string) error {
 }
 
 ///////////////////////////
+//       Internals       //
+///////////////////////////
+
+func (this *Processor) Cycles() uint32 {
+	return this.processor.cycles
+}
+
+func (this *Processor) InstructionsExecuted() uint32 {
+	return this.processor.instructionsExecuted
+}
+
+func (this *Processor) IncrementCycles() {
+	this.processor.cycles += 1
+}
+
+func (this *Processor) IncrementInstructionsExecuted() {
+	this.processor.instructionsExecuted += 1
+}
+
+func (this *Processor) LogEvent(event string) {
+	this.processor.dataLog[event] = append(this.processor.dataLog[event], this.Cycles())
+}
+
+///////////////////////////
 //       Metadata        //
 ///////////////////////////
 
@@ -174,4 +213,53 @@ func (this *Processor) IncrementProgramCounter(offset int32) {
 	} else {
 		this.processor.programCounter += uint32(offset)
 	}
+}
+
+///////////////////////////
+//         Stats         //
+///////////////////////////
+
+func (this *Processor) Stats() string {
+	stats := "\n------------- Program Stats ---------------\n"
+	stats += fmt.Sprintf(" => Instructions available: %d\n", len(this.InstructionsMap()))
+	stats += fmt.Sprintf(" => Instructions executed: %d\n", this.InstructionsExecuted())
+	stats += fmt.Sprintf(" => Cycles performed: %d\n", this.Cycles())
+	stats += "-------------------------------------------\n"
+	return stats
+}
+
+func (this *Processor) PipelineFlow() string {
+
+	str := "\n------------- Pipeline Flow ---------------\n"
+
+	// Create matrix
+	str += "      "
+	pipeline := make([][]string, this.InstructionsExecuted())
+	for c := uint32(0); c < this.Cycles(); c++ {
+		for i := range pipeline {
+			pipeline[i] = append(pipeline[i], " ")
+		}
+		str += fmt.Sprintf("|%03d", c)
+	}
+	str += "\n"
+
+	// Iterate each pipeline stage
+	for stage, array := range this.processor.dataLog {
+		for i := 0; i < len(array)/2; i += 1 {
+			startCycle := array[i*2]
+			endCycle := array[i*2+1]
+			if endCycle > startCycle {
+				for c := startCycle; c < endCycle; c++ {
+					pipeline[i][c] = stage
+				}
+			}
+		}
+	}
+
+	// Construct string matrix
+
+	for i := range pipeline {
+		str += fmt.Sprintf(" I%03d | %s\n", i, strings.Join(pipeline[i], " | "))
+	}
+	return str
 }

@@ -17,7 +17,7 @@ func (this *DataJ) ToUint32() uint32 {
 }
 
 func (this *DataJ) ToString() string {
-	return fmt.Sprintf("[Op = %s, Address = %s]",
+	return fmt.Sprintf("[Op = %s, Addr = %s]",
 		this.Opcode.ToString(), this.Address.ToString())
 }
 
