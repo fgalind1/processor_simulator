@@ -1,5 +1,4 @@
 bin
 *.hex
-*.out
 *.dat
-*.reg
+*.log

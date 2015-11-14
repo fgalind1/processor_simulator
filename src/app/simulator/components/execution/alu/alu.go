@@ -63,7 +63,7 @@ func (this *Alu) Process(instruction *instruction.Instruction) error {
 	if err != nil {
 		return err
 	}
-	logger.Print(" => [E]: [R%d(%#02X) = %#08X]", outputAddress, outputAddress*consts.BYTES_PER_WORD, this.Result())
+	logger.Collect(" => [E]: [R%d(%#02X) = %#08X]", outputAddress, outputAddress*consts.BYTES_PER_WORD, this.Result())
 
 	// Set status flags
 	this.SetStatusFlag(this.Result()%2 == 0, consts.FLAG_PARITY)

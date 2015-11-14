@@ -1,4 +1,4 @@
-package control
+package branch
 
 import (
 	"errors"
@@ -12,19 +12,19 @@ import (
 	"app/simulator/models/instruction/set"
 )
 
-type Control struct {
+type Branch struct {
 	bus *storagebus.StorageBus
 }
 
-func New(bus *storagebus.StorageBus) *Control {
-	return &Control{bus: bus}
+func New(bus *storagebus.StorageBus) *Branch {
+	return &Branch{bus: bus}
 }
 
-func (this *Control) Bus() *storagebus.StorageBus {
+func (this *Branch) Bus() *storagebus.StorageBus {
 	return this.bus
 }
 
-func (this *Control) Process(instruction *instruction.Instruction) error {
+func (this *Branch) Process(instruction *instruction.Instruction) error {
 	info := instruction.Info
 	operands := instruction.Data
 
@@ -35,7 +35,7 @@ func (this *Control) Process(instruction *instruction.Instruction) error {
 		registerS := operands.(*data.DataI).RegisterS.ToUint32()
 		op2 := this.Bus().LoadRegister(registerS)
 		immediate := operands.(*data.DataI).Immediate.ToUint32()
-		logger.Print(" => [E]: [R%d(%#02X) = %#08X ? R%d(%#02X) = %#08X]",
+		logger.Collect(" => [E]: [R%d(%#02X) = %#08X ? R%d(%#02X) = %#08X]",
 			registerD, registerD*consts.BYTES_PER_WORD, op1, registerS, registerS*consts.BYTES_PER_WORD, op2)
 
 		doBranch, err := processOperation(op1, op2, info.Opcode)
@@ -50,16 +50,16 @@ func (this *Control) Process(instruction *instruction.Instruction) error {
 			offsetAddress = offsetAddress << 2
 			// Increment program counter
 			this.Bus().IncrementProgramCounter(offsetAddress)
-			logger.Print(" => [E]: [PC(offset) = %d]", offsetAddress)
+			logger.Collect(" => [E]: [PC(offset) = %d, PC = %04X]", offsetAddress, this.Bus().ProgramCounter())
 		}
 	case data.TypeJ:
 		// Transform address from N instructions domain to N bytes domain (2 bytes per instruction)
 		address := operands.(*data.DataJ).Address.ToUint32() << 2
 		// Decrement 4 bytes so the automatic +4 process set the desired address
 		this.Bus().SetProgramCounter(address - 4)
-		logger.Print(" => [E]: [Address = %06X]", address)
+		logger.Collect(" => [E]: [Address = %06X]", address)
 	default:
-		return errors.New(fmt.Sprintf("Invalid data type to process by Control unit. Type: %d", info.Type))
+		return errors.New(fmt.Sprintf("Invalid data type to process by Branch unit. Type: %d", info.Type))
 	}
 	return nil
 }
@@ -75,6 +75,6 @@ func processOperation(registerD uint32, registerS uint32, opcode uint8) (bool, e
 	case set.OP_BGT:
 		return registerD > registerS, nil
 	default:
-		return false, errors.New(fmt.Sprintf("Invalid operation to process by Control unit. Opcode: %d", opcode))
+		return false, errors.New(fmt.Sprintf("Invalid operation to process by Branch unit. Opcode: %d", opcode))
 	}
 }

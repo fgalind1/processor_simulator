@@ -7,6 +7,7 @@ type StorageBus struct {
 	LoadData  func(uint32) uint32
 	StoreData func(uint32, uint32)
 
+	ProgramCounter          func() uint32
 	SetProgramCounter       func(uint32)
 	IncrementProgramCounter func(int32)
 }

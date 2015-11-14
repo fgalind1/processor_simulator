@@ -6,7 +6,6 @@ import (
 	"strconv"
 	"strings"
 
-	"app/simulator/consts"
 	"app/simulator/models/instruction/data"
 	"app/simulator/models/instruction/info"
 	"app/simulator/models/instruction/instruction"
@@ -116,7 +115,7 @@ func getItemsFromString(line string) ([]string, error) {
 }
 
 func computeBranchOffset(labelAddress, instructionAddress uint32) uint32 {
-	offsetAddress := labelAddress - instructionAddress - consts.BYTES_PER_WORD
+	offsetAddress := labelAddress - instructionAddress - 4
 	// If offset is negative, offset will be already in Two's complement per uint32 variables
 	// See ref https://golang.org/ref/spec: "...represented using two's complement arithmetic"
 	return offsetAddress >> 2

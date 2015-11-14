@@ -10,7 +10,7 @@ type CategoryEnum string
 
 const (
 	Aritmetic CategoryEnum = "Artitmetic"
-	Data      CategoryEnum = "Data"
+	LoadStore CategoryEnum = "Load Store"
 	Control   CategoryEnum = "Control"
 )
 
@@ -19,14 +19,16 @@ type Info struct {
 	Name     string
 	Category CategoryEnum
 	Type     data.TypeEnum
+	Cycles   uint8
 }
 
-func New(opcode uint8, name string, category CategoryEnum, datatype data.TypeEnum) *Info {
+func New(opcode uint8, name string, category CategoryEnum, datatype data.TypeEnum, cycles uint8) *Info {
 	return &Info{
 		Opcode:   opcode,
 		Name:     name,
 		Category: category,
 		Type:     datatype,
+		Cycles:   cycles,
 	}
 }
 

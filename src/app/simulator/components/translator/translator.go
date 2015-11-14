@@ -13,7 +13,7 @@ import (
 	"app/utils"
 )
 
-func TranslateFromFile(filename string) (string, error) {
+func TranslateFromFile(filename string, outputFilename string) (string, error) {
 
 	// Read lines from file
 	logger.Print(" => Reading assembly file: %s", filename)
@@ -23,7 +23,6 @@ func TranslateFromFile(filename string) (string, error) {
 	}
 
 	// Create output file
-	outputFilename := getOutputFilename(filename)
 	f, err := os.Create(outputFilename)
 	if err != nil {
 		return "", err

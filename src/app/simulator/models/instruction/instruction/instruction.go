@@ -5,6 +5,8 @@ import (
 	"app/simulator/models/instruction/info"
 )
 
+type Word [4]byte
+
 type Instruction struct {
 	Info *info.Info
 	Data data.Data
