@@ -13,4 +13,6 @@ type StorageBus struct {
 
 	IncrementProgramCounter func(*operation.Operation, int32)
 	SetProgramCounter       func(*operation.Operation, uint32)
+
+	SetBranchResult func(uint32, bool)
 }

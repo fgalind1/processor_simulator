@@ -51,12 +51,13 @@ func (this *Branch) Process(operation *operation.Operation) error {
 		logger.Collect(" => [E][%03d]: [R%d(%#02X) = %#08X ? R%d(%#02X) = %#08X]",
 			operation.Id(), registerD, registerD*consts.BYTES_PER_WORD, op1, registerS, registerS*consts.BYTES_PER_WORD, op2)
 
-		doBranch, err := processOperation(op1, op2, info.Opcode)
+		taken, err := processOperation(op1, op2, info.Opcode)
 		if err != nil {
 			return err
 		}
+		this.Bus().SetBranchResult(operation.Address(), taken)
 
-		if doBranch {
+		if taken {
 			offsetAddress := ComputeOffsetTypeI(operands)
 			this.Bus().IncrementProgramCounter(operation, offsetAddress)
 			logger.Collect(" => [E][%03d]: [PC(offset) = 0x%06X", operation.Id(), offsetAddress)

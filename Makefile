@@ -31,7 +31,6 @@ all: clean fmt build
 clean:
 	@echo "Cleaning build directory..."
 	@rm -rf $(APP_DIR)/$(APP_BIN)
-	@rm -rf $(APP_DIR)/$(BENCHMARK_SRC)
 
 fmt:
 	@echo "Formating app..."

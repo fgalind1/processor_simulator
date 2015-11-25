@@ -184,5 +184,8 @@ func (this *Dispatcher) getStorageBus(rob *reorderbuffer.ReorderBuffer) *storage
 		SetProgramCounter: func(op *operation.Operation, value uint32) {
 			rob.SetProgramCounter(op, value)
 		},
+
+		// Branch Predictor
+		SetBranchResult: this.Processor().SetBranchResult,
 	}
 }

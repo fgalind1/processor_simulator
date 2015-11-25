@@ -141,6 +141,12 @@ func (this *BranchPredictor) guessAddress(currentAddress uint32, instruction *in
 			} else {
 				return currentAddress + consts.BYTES_PER_WORD
 			}
+		case config.OneBitPredictor:
+			taken := this.Processor().GetGuessByAddress(currentAddress)
+			if taken {
+				return uint32(int32(currentAddress) + offset + consts.BYTES_PER_WORD)
+			}
+			return currentAddress + consts.BYTES_PER_WORD
 		}
 	}
 	return currentAddress + consts.BYTES_PER_WORD

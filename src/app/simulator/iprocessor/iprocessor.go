@@ -39,6 +39,8 @@ type IProcessor interface {
 	ProgramCounter() uint32
 	SetProgramCounter(value uint32)
 	IncrementProgramCounter(offset int32)
+	GetGuessByAddress(address uint32) bool
+	SetBranchResult(address uint32, taken bool)
 
 	///////////////////////////
 	//       Clock           //

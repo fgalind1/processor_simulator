@@ -24,6 +24,11 @@ func New(assemblyFileName string, config *config.Config) (*Processor, error) {
 			instructionsCompleted: []uint32{},
 			dataLog:               map[uint32][]LogEvent{},
 
+			branchHistoryTable:    map[uint32]bool{},
+			conditionalBranches:   0,
+			unconditionalBranches: 0,
+			mispredictedBranches:  0,
+
 			instructionsMap: map[uint32]string{},
 			instructionsSet: set.Init(),
 			config:          config,

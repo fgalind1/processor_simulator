@@ -46,6 +46,9 @@ const (
 	NeverTakenPredictor    PredictorType = "never_taken"
 	BackwardTakenPredictor PredictorType = "backward_taken"
 	ForwardTakenPredictor  PredictorType = "forward_taken"
+
+	// Dynamic predictors
+	OneBitPredictor PredictorType = "one_bit"
 )
 
 func Load(filename string) (*Config, error) {

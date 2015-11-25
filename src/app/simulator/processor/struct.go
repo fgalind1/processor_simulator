@@ -25,6 +25,7 @@ type processor struct {
 	dataLog               map[uint32][]LogEvent
 
 	// Branch stats
+	branchHistoryTable    map[uint32]bool
 	conditionalBranches   uint32
 	unconditionalBranches uint32
 	mispredictedBranches  uint32
@@ -215,6 +216,18 @@ func (this *Processor) IncrementProgramCounter(offset int32) {
 	} else {
 		this.processor.programCounter += uint32(offset)
 	}
+}
+
+func (this *Processor) GetGuessByAddress(address uint32) bool {
+	taken, exists := this.processor.branchHistoryTable[address]
+	if !exists {
+		return false
+	}
+	return taken
+}
+
+func (this *Processor) SetBranchResult(address uint32, taken bool) {
+	this.processor.branchHistoryTable[address] = taken
 }
 
 ///////////////////////////
