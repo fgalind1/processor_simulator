@@ -48,12 +48,6 @@ benchmark:
 	@echo "Running benchmark tests..."
 	exec $(APP_DIR)/benchmark.sh
 
-	@echo "Cleaning log files..."
-	rm -r $(APP_DIR)/$(BENCHMARK_SRC) /*/*/debug.log
-	rm -r $(APP_DIR)/$(BENCHMARK_SRC) /*/*/assembly.hex
-	rm -r $(APP_DIR)/$(BENCHMARK_SRC) /*/*/debug.log
-	rm -r $(APP_DIR)/$(BENCHMARK_SRC) /*/*/pipeline.dat
-
 test: build
 	@echo "Testing app..."
 	@$(GO) test $(PACKAGE_NAME)...
