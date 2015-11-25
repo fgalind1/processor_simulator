@@ -9,38 +9,11 @@ import (
 	"github.com/codegangsta/cli"
 
 	"app/logger"
-	"app/simulator/components/processor"
-	"app/simulator/components/translator"
-	"app/simulator/config"
-	"app/simulator/consts"
+	"app/simulator/processor"
+	"app/simulator/processor/config"
+	"app/simulator/processor/consts"
+	"app/simulator/translator"
 )
-
-const (
-	CYCLE_PERIOD_MS = 50
-
-	REGISTERS_MEMORY_SIZE    = 32 * 4   // 32 words (4 bytes each)
-	INSTRUCTIONS_MEMORY_SIZE = 1 * 1024 // 1KB (254 words)
-	DATA_MEMORY_SIZE         = 1 * 1024 // 1KB (254 words)
-
-	INSTRUCTIONS_BUFFER_SIZE = 2
-	DECODER_UNITS            = 2
-	BRANCH_UNITS             = 1
-	LOAD_STORE_UNITS         = 1
-	ALU_UNITS                = 1
-)
-
-func getConfig() *config.Config {
-	return config.New(
-		CYCLE_PERIOD_MS,
-		REGISTERS_MEMORY_SIZE,
-		INSTRUCTIONS_MEMORY_SIZE,
-		DATA_MEMORY_SIZE,
-		INSTRUCTIONS_BUFFER_SIZE,
-		DECODER_UNITS,
-		BRANCH_UNITS,
-		LOAD_STORE_UNITS,
-		ALU_UNITS)
-}
 
 func main() {
 	app := cli.NewApp()
@@ -60,6 +33,10 @@ func main() {
 					Name:  "s, step-by-step",
 					Usage: "Run interactively step by step",
 				},
+				cli.BoolFlag{
+					Name:  "v, verbose",
+					Usage: "Verbose on debug mode",
+				},
 				cli.StringFlag{
 					Name:  "o, output-folder",
 					Value: "",
@@ -70,6 +47,11 @@ func main() {
 					Value: "",
 					Usage: "Processor config filename, if not provided a deafult config will be provided",
 				},
+				cli.IntFlag{
+					Name:  "max-cycles",
+					Value: -1,
+					Usage: "Maximum number of cycles to execute",
+				},
 			},
 		},
 	}
@@ -78,6 +60,9 @@ func main() {
 }
 
 func runCommand(c *cli.Context) {
+
+	printHeader()
+	logger.SetVerboseDebug(c.Bool("verbose"))
 
 	if len(c.Args()) != 1 {
 		logger.Error("Expecting <assembly-filename> and got %d parameters", len(c.Args()))
@@ -95,25 +80,27 @@ func runCommand(c *cli.Context) {
 		outputFolder = filepath.Join(filepath.Dir(assemblyFilename), getFileName(assemblyFilename))
 	}
 
-	cfg := getConfig()
 	configFilename, _ := filepath.Abs(c.String("config-filename"))
-	if configFilename != "" {
-		var err error
-		cfg, err = config.Load(configFilename)
-		if err != nil {
-			logger.Error("Failed loading config. %s", err.Error())
-			os.Exit(1)
-		}
+	if configFilename == "" {
+		logger.Error("Configuration file not provided, please provide a valid configuration file")
+		os.Exit(1)
 	}
 
-	err := runProgram(assemblyFilename, c.Bool("step-by-step"), outputFolder, cfg)
+	cfg, err := config.Load(configFilename)
+	if err != nil {
+		logger.Error("Failed loading config. %s", err.Error())
+		os.Exit(1)
+	}
+	logger.Print(" => Configuration file: %s", configFilename)
+
+	err = runProgram(assemblyFilename, c.Bool("step-by-step"), outputFolder, cfg, uint32(c.Int("max-cycles")))
 	if err != nil {
 		logger.Error(err.Error())
 		os.Exit(1)
 	}
 }
 
-func runProgram(assemblyFilename string, interactive bool, outputFolder string, config *config.Config) error {
+func runProgram(assemblyFilename string, interactive bool, outputFolder string, config *config.Config, maxCycles uint32) error {
 
 	err := os.MkdirAll(outputFolder, 0777)
 	if err != nil {
@@ -146,6 +133,11 @@ func runProgram(assemblyFilename string, interactive bool, outputFolder string, 
 		// Unpause and execute next cycle
 		p.ContinueClock()
 		result = p.NextCycle()
+		// If max cycles option selected
+		if maxCycles > 0 && p.Cycles() >= maxCycles {
+			p.PauseClock()
+			break
+		}
 	}
 
 	logger.Print(p.Stats())
@@ -186,4 +178,12 @@ func runInteractiveStep(p *processor.Processor) bool {
 		return false
 	}
 	return true
+}
+
+func printHeader() {
+	logger.Print("")
+	logger.Print("################################################")
+	logger.Print("#     Superscalar Processor Simulator v1.0     #")
+	logger.Print("################################################")
+	logger.Print("")
 }

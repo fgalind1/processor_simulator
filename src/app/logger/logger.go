@@ -7,9 +7,23 @@ import (
 )
 
 var buffer []string
+var verboseDebug bool
+var verboseQuiet bool
+
+func SetVerboseQuiet(value bool) {
+	verboseQuiet = value
+}
+
+func SetVerboseDebug(value bool) {
+	verboseDebug = value
+}
 
 func Print(format string, v ...interface{}) {
+	if !verboseQuiet {
 	fmt.Printf(format+"\n", v...)
+	} else {
+		buffer = append(buffer, fmt.Sprintf(format, v...))
+	}
 }
 
 func Error(format string, v ...interface{}) {
@@ -18,6 +32,9 @@ func Error(format string, v ...interface{}) {
 
 func Collect(format string, v ...interface{}) {
 	buffer = append(buffer, fmt.Sprintf(format, v...))
+	if verboseDebug {
+		fmt.Printf(format+"\n", v...)
+	}
 }
 
 func CleanBuffer() {

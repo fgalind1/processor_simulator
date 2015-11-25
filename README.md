@@ -168,7 +168,7 @@ mul   Rd,Rs,Rt | Rd = Rs * Rt   |  R   | 000111 | Rd | Rs | Rt  |  -  |  -  | wi
     Syntax     |  Description   | Type | 31              |||||             0 |         Notes           |
 ---------------|----------------|------|--------|----|----|------|-----|-----|-------------------------|
 lw    Rd,Rs,C  | Rd = M[Rs + C] |  I   | 010000 | Rd | Rs | Offset (16)    ||| load M[Rs + C] into Rd  |
-sw    Rd,Rs,C  | M[Rs + C] = Rd |  I   | 010001 | Rd | Rs | Offset (16)    ||| store Rd into M[Rs + C] |
+sw    Rd,Rs,C  | M[Rd + C] = Rs |  I   | 010001 | Rd | Rs | Offset (16)    ||| store Rd into M[Rs + C] |
 lli   Rd,C     | Rd = C         |  I   | 010010 | Rd | -  | Immediate (16) ||| load lower immediate    |
 sli   Rd,C     | M[Rd] = C      |  I   | 010011 | Rd | -  | Immediate (16) ||| store lower immediate   |
 lui   Rd,C     | Rd = C << 16   |  I   | 010100 | Rd | -  | Immediate (16) ||| load upper immediate    |
@@ -183,7 +183,7 @@ beq  Rd,Rs,C   | br on equal     |  I   | 100000 | Rd | Rs | Immediate (16) ||| 
 bne  Rd,Rs,C   | br on not equal |  I   | 100001 | Rd | Rs | Immediate (16) ||| PC = PC + 4 + 4*C    |
 blt  Rd,Rs,C   | br on less      |  I   | 100010 | Rd | Rs | Immediate (16) ||| PC = PC + 4 + 4*C    |
 bgt  Rd,Rs,C   | br on greater   |  I   | 100011 | Rd | Rs | Immediate (16) ||| PC = PC + 4 + 4*C    |
-j    C         | jump to C       |  I   | 100100 | C Address (26)           ||| PC = 4*C             |
+j    C         | jump to C       |  J   | 100100 | C Address (26)           ||| PC = 4*C             |
  
 ## Translator
 

@@ -16,11 +16,11 @@ LLI     R12, 192                   ; C's memory index (0xC0)
 MEMORY_LOOP:                       ; Start loop (for RI=0; R1 < R20; R1++)
 ADDI    R1, R1, 1                  ; R1 += 1
 
-SW      R1, R10, 0                 ; A[I] = I
-SLI     R11, 8                     ; B[I] = 8
+SW      R10, R1, 0                 ; A[R10] = R1
+SLI     R11, 8                     ; B[R11] = 8
 LW      R13, R11, 0                ; R13 = MEM[B[I]]
 ADD     R14, R1, R13               ; R14 = A[I] + B[I]
-SW      R14, R12, 0                ; C[I] = R14
+SW      R12, R14, 0                ; C[R12] = R14 = R1 + B[R11]
 
 ; Increment array indexes
 ADDI    R10, R10, 4                ; R10 += 1 (A's index)

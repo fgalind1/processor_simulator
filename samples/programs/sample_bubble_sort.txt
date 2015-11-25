@@ -3,8 +3,8 @@
 ;
 
 ; -----------------------------------------------------
-;    Input  = [ 9, 13, 35, 10, 7, 24, 12, 6, 21, 15]
-;    Output = [ 6, 7, 9, 10, 12, 13, 15, 21, 24, 35]
+;    Input  = [ 9, D, 23, A, 7, 18, C, 6, 15, F]
+;    Output = [ 6, 7, 9, A, C, D, F, 15, 18, 23]
 ; -----------------------------------------------------
 
 LLI    R10, 32                        ; array address
@@ -32,6 +32,23 @@ ADDI   R12, R12, 4
 SLI    R12, 21
 ADDI   R12, R12, 4
 SLI    R12, 15
+
+LLI    R21, 1
+LLI    R21, 1
+LLI    R21, 1
+LLI    R21, 1
+LLI    R21, 1
+LLI    R21, 1
+LLI    R21, 1
+LLI    R21, 1
+LLI    R21, 1
+LLI    R21, 1
+LLI    R21, 1
+LLI    R21, 1
+LLI    R21, 1
+LLI    R21, 1
+
+; 21 operations
 
 ; -----------------------------------------------------
 ;             Function bubbleSort(array, lengt)
@@ -63,7 +80,6 @@ ADDI   R2, R11, 0                   ; i += lenght
     ; for(R4(j) = 0; j < i; j++) {
 
         FOR_J:
-        BEQ    R2, R4, END_FOR_J    ; continue if j < i
 
         ; Start instructions
         LW     R6, R5, 0            ; R6 = data[j]
@@ -76,8 +92,8 @@ ADDI   R2, R11, 0                   ; i += lenght
 
             DO_SWAP:
             ; Start instructions
-            SW     R7, R5, 0        ; data[j] = data[j+1]
-            SW     R6, R5, 4        ; data[j+1] = data[j]
+            SW     R5, R7, 0        ; data[j] = data[j+1]
+            SW     R5, R6, 4        ; data[j+1] = data[j]
             LLI    R3, 1            ; swapped = true
         ; }    
         END_IF_SWAP:
@@ -85,9 +101,8 @@ ADDI   R2, R11, 0                   ; i += lenght
         ADDI   R4, R4, 1            ; j = j + 1
         ADDI   R5, R5, 4            ; address += 4 bytes
 
-        J      FOR_J
+        BNE    R2, R4, FOR_J        ; continue if j != i (backward jump)
     ; }
-    END_FOR_J:
 
     J      FOR_I
 ; }
