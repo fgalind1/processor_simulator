@@ -15,6 +15,7 @@
 APP_DIR=${CURDIR}
 APP_BIN:=bin
 APP_SRC:=src
+BENCHMARK_SRC:=benchmark
 
 PACKAGE_NAME:=app/simulator
 TOOL_NAME:=simulator
@@ -23,13 +24,14 @@ GOFMT:=gofmt
 GOPATH:=${APP_DIR}
 GO:=env GOPATH="${GOPATH}" go
 
-.PHONY: clean build
+.PHONY: clean build benchmark
 
 all: clean fmt build
 
 clean:
 	@echo "Cleaning build directory..."
 	@rm -rf $(APP_DIR)/$(APP_BIN)
+	@rm -rf $(APP_DIR)/$(BENCHMARK_SRC)
 
 fmt:
 	@echo "Formating app..."
@@ -38,6 +40,19 @@ fmt:
 build: fmt
 	@echo "Building app..."
 	@$(GO) build -o $(APP_DIR)/$(APP_BIN)/$(TOOL_NAME).exe $(PACKAGE_NAME)
+
+benchmark:
+	@echo "Cleaning benchmark results..."
+	@rm -rf $(APP_DIR)/$(BENCHMARK_SRC) 
+
+	@echo "Running benchmark tests..."
+	exec $(APP_DIR)/benchmark.sh
+
+	@echo "Cleaning log files..."
+	rm -r $(APP_DIR)/$(BENCHMARK_SRC) /*/*/debug.log
+	rm -r $(APP_DIR)/$(BENCHMARK_SRC) /*/*/assembly.hex
+	rm -r $(APP_DIR)/$(BENCHMARK_SRC) /*/*/debug.log
+	rm -r $(APP_DIR)/$(BENCHMARK_SRC) /*/*/pipeline.dat
 
 test: build
 	@echo "Testing app..."

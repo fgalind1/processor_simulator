@@ -33,21 +33,6 @@ SLI    R12, 21
 ADDI   R12, R12, 4
 SLI    R12, 15
 
-LLI    R21, 1
-LLI    R21, 1
-LLI    R21, 1
-LLI    R21, 1
-LLI    R21, 1
-LLI    R21, 1
-LLI    R21, 1
-LLI    R21, 1
-LLI    R21, 1
-LLI    R21, 1
-LLI    R21, 1
-LLI    R21, 1
-LLI    R21, 1
-LLI    R21, 1
-
 ; 21 operations
 
 ; -----------------------------------------------------
@@ -80,6 +65,7 @@ ADDI   R2, R11, 0                   ; i += lenght
     ; for(R4(j) = 0; j < i; j++) {
 
         FOR_J:
+        BEQ    R2, R4, END_FOR_J    ; continue if j != i (forward jump)
 
         ; Start instructions
         LW     R6, R5, 0            ; R6 = data[j]
@@ -101,8 +87,9 @@ ADDI   R2, R11, 0                   ; i += lenght
         ADDI   R4, R4, 1            ; j = j + 1
         ADDI   R5, R5, 4            ; address += 4 bytes
 
-        BNE    R2, R4, FOR_J        ; continue if j != i (backward jump)
+        J      FOR_J:
     ; }
+    END_FOR_J:
 
     J      FOR_I
 ; }
