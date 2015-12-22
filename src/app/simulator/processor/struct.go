@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"app/logger"
+	"app/simulator/processor/components/branchpredictor"
 	"app/simulator/processor/components/clock"
 	"app/simulator/processor/components/memory"
 	"app/simulator/processor/config"
@@ -19,16 +20,20 @@ type Processor struct {
 
 type processor struct {
 	// internals
-	done                  bool
-	instructionsFetched   []string
-	instructionsCompleted []uint32
-	dataLog               map[uint32][]LogEvent
+	done                     bool
+	instructionsFetched      []string
+	instructionsCompleted    []uint32
+	lastOperationIdCompleted uint32
+	dataLog                  map[uint32][]LogEvent
 
 	// Branch stats
-	branchHistoryTable    map[uint32]bool
+	branchHistoryTable    map[uint32]uint32
+	branchPredictorBits   uint32
 	conditionalBranches   uint32
 	unconditionalBranches uint32
 	mispredictedBranches  uint32
+	noTakenBranches       uint32
+	speculativeJumps      uint32
 
 	// metadata
 	instructionsMap map[uint32]string
@@ -81,7 +86,12 @@ func (this *Processor) LogInstructionFetched(address uint32) {
 }
 
 func (this *Processor) LogInstructionCompleted(operationId uint32) {
+	this.processor.lastOperationIdCompleted = operationId
 	this.processor.instructionsCompleted = append(this.processor.instructionsCompleted, operationId)
+}
+
+func (this *Processor) LastOperationIdCompleted() uint32 {
+	return this.processor.lastOperationIdCompleted
 }
 
 func (this *Processor) LogEvent(unit string, index uint32, operationId uint32, start uint32) {
@@ -127,9 +137,15 @@ func (this *Processor) LogEventFinish(unit string, index uint32, operationId uin
 	}
 }
 
-func (this *Processor) LogBranchInstruction(conditionalBranch, mispredicted bool) {
+func (this *Processor) LogBranchInstruction(address uint32, conditionalBranch, mispredicted bool, taken bool) {
 	if conditionalBranch {
 		this.processor.conditionalBranches += 1
+		if !taken {
+			this.processor.noTakenBranches += 1
+		}
+		currState, _ := this.GetBranchStateByAddress(address)
+		nextState := branchpredictor.GetNextState(currState, this.processor.branchPredictorBits, taken)
+		this.processor.branchHistoryTable[address] = nextState
 	} else {
 		this.processor.unconditionalBranches += 1
 	}
@@ -218,16 +234,32 @@ func (this *Processor) IncrementProgramCounter(offset int32) {
 	}
 }
 
-func (this *Processor) GetGuessByAddress(address uint32) bool {
-	taken, exists := this.processor.branchHistoryTable[address]
-	if !exists {
-		return false
-	}
-	return taken
+func (this *Processor) SetPredictorBits(bits uint32) {
+	this.processor.branchPredictorBits = bits
 }
 
-func (this *Processor) SetBranchResult(address uint32, taken bool) {
-	this.processor.branchHistoryTable[address] = taken
+func (this *Processor) GetBranchStateByAddress(address uint32) (uint32, bool) {
+	state, exist := this.processor.branchHistoryTable[address]
+	if !exist {
+		return 0, false
+	}
+	return state, true
+}
+
+func (this *Processor) SpeculativeJumps() uint32 {
+	return this.processor.speculativeJumps
+}
+
+func (this *Processor) AddSpeculativeJump() {
+	this.processor.speculativeJumps += 1
+}
+
+func (this *Processor) DecrementSpeculativeJump() {
+	this.processor.speculativeJumps -= 1
+}
+
+func (this *Processor) ClearSpeculativeJumps() {
+	this.processor.speculativeJumps = 0
 }
 
 ///////////////////////////

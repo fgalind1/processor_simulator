@@ -2,6 +2,7 @@ package branchpredictor
 
 import (
 	"errors"
+	"math"
 	"time"
 
 	"app/logger"
@@ -21,15 +22,38 @@ type branchPredictor struct {
 	predictorType config.PredictorType
 	index         uint32
 	processor     iprocessor.IProcessor
+	predictorBits uint32
 }
 
 func New(predictorType config.PredictorType, index uint32, processor iprocessor.IProcessor) *BranchPredictor {
-	return &BranchPredictor{
+	bp := &BranchPredictor{
 		&branchPredictor{
 			predictorType: predictorType,
 			index:         index,
 			processor:     processor,
 		},
+	}
+	if predictorType == config.OneBitPredictor {
+		bp.predictorBits = 1
+	} else if predictorType == config.TwoBitPredictor {
+		bp.predictorBits = 2
+	}
+	bp.Processor().SetPredictorBits(bp.predictorBits)
+	return bp
+}
+
+func GetNextState(currentState uint32, predictorBits uint32, taken bool) uint32 {
+	maxValue := uint32(math.Exp2(float64(predictorBits))) - 1
+	if taken {
+		if currentState == maxValue {
+			return currentState
+		}
+		return currentState + 1
+	} else {
+		if currentState == 0 {
+			return currentState
+		}
+		return currentState - 1
 	}
 }
 
@@ -45,6 +69,10 @@ func (this *BranchPredictor) Processor() iprocessor.IProcessor {
 	return this.branchPredictor.processor
 }
 
+func (this *BranchPredictor) PredictorBits() uint32 {
+	return this.branchPredictor.predictorBits
+}
+
 func (this *BranchPredictor) PreDecodeInstruction(address uint32) (bool, *instruction.Instruction) {
 
 	// Pre-decode to see if it is a branch instruction
@@ -56,10 +84,11 @@ func (this *BranchPredictor) PreDecodeInstruction(address uint32) (bool, *instru
 	return needsWait, instruction
 }
 
-func (this *BranchPredictor) GetNextAddress(address uint32, instruction *instruction.Instruction) (uint32, bool, error) {
+func (this *BranchPredictor) GetNextAddress(address uint32, instruction *instruction.Instruction, forceStall bool) (uint32, bool, error) {
 
 	nextData := this.Processor().InstructionsMemory().Load(address, consts.BYTES_PER_WORD)
 	opId := this.Processor().InstructionsFetchedCounter() - 1
+	this.Processor().AddSpeculativeJump()
 
 	// Check if next instruction is valid
 	if this.Processor().ReachedEnd(nextData) {
@@ -71,7 +100,7 @@ func (this *BranchPredictor) GetNextAddress(address uint32, instruction *instruc
 
 	// If it needs to wait
 	needsWait, predicted := this.needsWait(instruction.Info)
-	if needsWait {
+	if needsWait || forceStall {
 		// Stall until previous instruction finishes
 		logger.Collect(" => [BP%d][%03d]: Branch detected, wait to finish queue (%d out of %d)...",
 			this.Index(), this.Processor().InstructionsFetchedCounter()-1, this.Processor().InstructionsCompletedCounter(), opId)
@@ -106,10 +135,6 @@ func (this *BranchPredictor) isInstructionCompleted(operationId uint32) bool {
 	return false
 }
 
-//////////////////////////////////////////////
-//      PreditorType specific methods       //
-//////////////////////////////////////////////
-
 func (this *BranchPredictor) needsWait(info *info.Info) (bool, bool) {
 	needsWait := info.IsConditionalBranch() && this.PredictorType() == config.StallPredictor
 	speculativeExecution := info.IsConditionalBranch() && this.PredictorType() != config.StallPredictor
@@ -141,8 +166,8 @@ func (this *BranchPredictor) guessAddress(currentAddress uint32, instruction *in
 			} else {
 				return currentAddress + consts.BYTES_PER_WORD
 			}
-		case config.OneBitPredictor:
-			taken := this.Processor().GetGuessByAddress(currentAddress)
+		case config.OneBitPredictor, config.TwoBitPredictor:
+			taken := this.getGuessByAddress(currentAddress)
 			if taken {
 				return uint32(int32(currentAddress) + offset + consts.BYTES_PER_WORD)
 			}
@@ -150,4 +175,16 @@ func (this *BranchPredictor) guessAddress(currentAddress uint32, instruction *in
 		}
 	}
 	return currentAddress + consts.BYTES_PER_WORD
+}
+
+func (this *BranchPredictor) getGuessByAddress(address uint32) bool {
+	state, exists := this.Processor().GetBranchStateByAddress(address)
+	if !exists {
+		logger.Collect(" => [BP0]: No history for address %#04X", address)
+		return false
+	}
+	totalStates := uint32(math.Exp2(float64(this.PredictorBits())))
+	taken := state >= totalStates/2
+	logger.Collect(" => [BP0]: Address %#04X, Total States: %d, State: %d ,Taken: %v", address, totalStates, state, taken)
+	return taken
 }

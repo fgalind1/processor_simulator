@@ -6,9 +6,11 @@ import (
 	"strconv"
 	"strings"
 
+	"app/simulator/processor/consts"
 	"app/simulator/processor/models/data"
 	"app/simulator/processor/models/info"
 	"app/simulator/processor/models/instruction"
+	"app/simulator/standards/ieee754"
 )
 
 type Set []*info.Info
@@ -40,20 +42,20 @@ func (this Set) GetInstructionFromString(line string, address uint32, labels map
 	}
 
 	// Search opcode in the instruction set
-	info, err := this.GetInstructionInfoFromName(items[0])
+	opInfo, err := this.GetInstructionInfoFromName(items[0])
 	if err != nil {
 		return nil, err
 	}
 
 	// Check all operands (except opcode/operation) is a numeric value
-	operands := []uint32{uint32(info.Opcode)}
+	operands := []uint32{uint32(opInfo.Opcode)}
 	for _, value := range items[1:] {
 		if strings.TrimSpace(value) == "" {
 			continue
 		}
 		labelAddress, isLabel := labels[value]
 		if isLabel {
-			if info.Type == data.TypeJ {
+			if opInfo.Type == data.TypeJ {
 				offset := computeBranchAddress(labelAddress)
 				operands = append(operands, offset)
 			} else {
@@ -61,21 +63,29 @@ func (this Set) GetInstructionFromString(line string, address uint32, labels map
 				operands = append(operands, offset)
 			}
 		} else {
-			integer, err := strconv.Atoi(strings.Replace(value, "R", "", -1))
-			if err != nil {
-				return nil, errors.New(fmt.Sprintf("Expecting an integer or RX operand and found: %s", value))
+			if opInfo.Category == info.FloatingPoint && !strings.Contains(value, "R") {
+				floatValue, err := strconv.ParseFloat(value, consts.ARCHITECTURE_SIZE)
+				if err != nil {
+					return nil, errors.New(fmt.Sprintf("Expecting a float value and found: %s. %s", value, err.Error()))
+				}
+				operands = append(operands, ieee754.PackFloat754_32(float32(floatValue)))
+			} else {
+				integer, err := strconv.Atoi(strings.Replace(value, "R", "", -1))
+				if err != nil {
+					return nil, errors.New(fmt.Sprintf("Expecting an integer or RX operand and found: %s", value))
+				}
+				operands = append(operands, uint32(integer))
 			}
-			operands = append(operands, uint32(integer))
 		}
 	}
 
 	// Get data object from operands
-	data, err := data.GetDataFromParts(info.Type, operands...)
+	data, err := data.GetDataFromParts(opInfo.Type, operands...)
 	if err != nil {
 		return nil, err
 	}
 
-	return instruction.New(info, data), nil
+	return instruction.New(opInfo, data), nil
 }
 
 func (this Set) GetInstructionFromBytes(bytes []byte) (*instruction.Instruction, error) {

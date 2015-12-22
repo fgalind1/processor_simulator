@@ -54,17 +54,17 @@ func (this *Alu) Status() uint32 {
 	return this.alu.Status
 }
 
-func (this *Alu) Process(operation *operation.Operation) error {
+func (this *Alu) Process(operation *operation.Operation) (*operation.Operation, error) {
 	instruction := operation.Instruction()
 
 	// Clean Status
 	this.CleanStatus()
 
-	outputAddress, err := this.compute(instruction.Info, instruction.Data)
+	outputAddress, err := this.compute(operation, instruction.Info, instruction.Data)
 	if err != nil {
-		return err
+		return operation, err
 	}
-	logger.Collect(" => [E][%03d]: [R%d(%#02X) = %#08X]", operation.Id(), outputAddress, outputAddress*consts.BYTES_PER_WORD, this.Result())
+	logger.Collect(" => [ALU][%03d]: [R%d(%#02X) = %#08X]", operation.Id(), outputAddress, outputAddress*consts.BYTES_PER_WORD, this.Result())
 
 	// Set status flags
 	this.SetStatusFlag(this.Result()%2 == 0, consts.FLAG_PARITY)
@@ -73,7 +73,7 @@ func (this *Alu) Process(operation *operation.Operation) error {
 
 	// Persist output data
 	this.Bus().StoreRegister(operation, outputAddress, this.Result())
-	return nil
+	return operation, nil
 }
 
 func (this *Alu) getOperands(info *info.Info, operands interface{}) (uint32, uint32, uint32, error) {
@@ -94,7 +94,7 @@ func (this *Alu) getOperands(info *info.Info, operands interface{}) (uint32, uin
 	return op1, op2, outputAddr, nil
 }
 
-func (this *Alu) compute(info *info.Info, operands interface{}) (uint32, error) {
+func (this *Alu) compute(op *operation.Operation, info *info.Info, operands interface{}) (uint32, error) {
 
 	op1, op2, outputAddr, err := this.getOperands(info, operands)
 	if err != nil {
@@ -103,27 +103,52 @@ func (this *Alu) compute(info *info.Info, operands interface{}) (uint32, error) 
 
 	switch info.Opcode {
 	case set.OP_ADD:
-		value1 := this.Bus().LoadRegister(op1)
-		value2 := this.Bus().LoadRegister(op2)
+		// Arithmetic
+		value1 := this.Bus().LoadRegister(op, op1)
+		value2 := this.Bus().LoadRegister(op, op2)
 		this.SetResult(value1 + value2)
 		this.SetStatusFlag(getSign(value1) == getSign(value2) && getSign(value1) != getSign(this.Result()), consts.FLAG_OVERFLOW)
-	case set.OP_ADDU:
-		this.SetResult(this.Bus().LoadRegister(op1) + this.Bus().LoadRegister(op2))
-	case set.OP_SUB:
-		value1 := this.Bus().LoadRegister(op1)
-		value2 := this.Bus().LoadRegister(op2)
-		this.SetResult(value1 - value2)
-		this.SetStatusFlag(getSign(value1) != getSign(value2) && getSign(value2) == getSign(this.Result()), consts.FLAG_OVERFLOW)
-	case set.OP_SUBU:
-		this.SetResult(this.Bus().LoadRegister(op1) - this.Bus().LoadRegister(op2))
 	case set.OP_ADDI:
-		value1 := this.Bus().LoadRegister(op1)
+		value1 := this.Bus().LoadRegister(op, op1)
 		this.SetResult(value1 + op2)
 		this.SetStatusFlag(getSign(value1) == getSign(op2) && getSign(value1) != getSign(this.Result()), consts.FLAG_OVERFLOW)
+	case set.OP_ADDU:
+		this.SetResult(this.Bus().LoadRegister(op, op1) + this.Bus().LoadRegister(op, op2))
 	case set.OP_ADDIU:
-		this.SetResult(this.Bus().LoadRegister(op1) + op2)
+		this.SetResult(this.Bus().LoadRegister(op, op1) + op2)
+	case set.OP_SUB:
+		value1 := this.Bus().LoadRegister(op, op1)
+		value2 := this.Bus().LoadRegister(op, op2)
+		this.SetResult(value1 - value2)
+		this.SetStatusFlag(getSign(value1) != getSign(value2) && getSign(value2) == getSign(this.Result()), consts.FLAG_OVERFLOW)
+	case set.OP_SUBI:
+		value1 := this.Bus().LoadRegister(op, op1)
+		this.SetResult(value1 - op2)
+		this.SetStatusFlag(getSign(value1) != getSign(op2) && getSign(op2) == getSign(this.Result()), consts.FLAG_OVERFLOW)
+	case set.OP_SUBU:
+		this.SetResult(this.Bus().LoadRegister(op, op1) - this.Bus().LoadRegister(op, op2))
+	case set.OP_MUL:
+		value1 := this.Bus().LoadRegister(op, op1)
+		value2 := this.Bus().LoadRegister(op, op2)
+		this.SetResult(value1 * value2)
+	// Bitwise Shifts
+	case set.OP_SHL:
+		value1 := this.Bus().LoadRegister(op, op1)
+		value2 := this.Bus().LoadRegister(op, op2)
+		this.SetResult(value1 << value2)
+	case set.OP_SHLI:
+		value1 := this.Bus().LoadRegister(op, op1)
+		this.SetResult(value1 << op2)
+	case set.OP_SHR:
+		value1 := this.Bus().LoadRegister(op, op1)
+		value2 := this.Bus().LoadRegister(op, op2)
+		this.SetResult(value1 >> value2)
+	case set.OP_SHRI:
+		value1 := this.Bus().LoadRegister(op, op1)
+		this.SetResult(value1 >> op2)
+	// Logical
 	case set.OP_CMP:
-		val1, val2 := this.Bus().LoadRegister(op1), this.Bus().LoadRegister(op2)
+		val1, val2 := this.Bus().LoadRegister(op, op1), this.Bus().LoadRegister(op, op2)
 		if val1 < val2 {
 			this.SetResult(1)
 		} else if val1 == val2 {
@@ -131,10 +156,20 @@ func (this *Alu) compute(info *info.Info, operands interface{}) (uint32, error) 
 		} else {
 			this.SetResult(4)
 		}
-	case set.OP_MUL:
-		value1 := this.Bus().LoadRegister(op1)
-		value2 := this.Bus().LoadRegister(op2)
-		this.SetResult(value1 * value2)
+	case set.OP_AND:
+		value1 := this.Bus().LoadRegister(op, op1)
+		value2 := this.Bus().LoadRegister(op, op2)
+		this.SetResult(value1 & value2)
+	case set.OP_ANDI:
+		value1 := this.Bus().LoadRegister(op, op1)
+		this.SetResult(value1 & op2)
+	case set.OP_OR:
+		value1 := this.Bus().LoadRegister(op, op1)
+		value2 := this.Bus().LoadRegister(op, op2)
+		this.SetResult(value1 | value2)
+	case set.OP_ORI:
+		value1 := this.Bus().LoadRegister(op, op1)
+		this.SetResult(value1 | op2)
 	default:
 		return 0, errors.New(fmt.Sprintf("Invalid operation to process by Alu unit. Opcode: %d", info.Opcode))
 	}

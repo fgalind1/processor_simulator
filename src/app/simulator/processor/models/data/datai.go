@@ -27,6 +27,10 @@ func (this *DataI) ToInterface() interface{} {
 	return this
 }
 
+func (this *DataI) SetRegisterD(value uint32) {
+	this.RegisterD = bits.FromUint32(value, 5)
+}
+
 func getDataIFromUint32(data uint32) (*DataI, error) {
 	bits := bits.FromUint32(data, 32)
 	return &DataI{

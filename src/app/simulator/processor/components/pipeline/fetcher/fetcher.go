@@ -136,13 +136,27 @@ func (this *Fetcher) fetchInstructions(op *operation.Operation, bytes []byte, in
 		// Add operation to be sent to decode channel
 		ops = append(ops, op)
 
-		// Add next instruction for fetching (as many instructions as it supports per cycle)
+		// Do pre-decode
 		needsWait, instruction := this.BranchPredictor().PreDecodeInstruction(op.Address())
+
+		// If is not pipelined than wait instruction to finish
+		if !this.Processor().Config().Pipelined() {
+			go func() {
+				address, _, err := this.BranchPredictor().GetNextAddress(op.Address(), instruction, true)
+				newOp := operation.New(this.Processor().InstructionsFetchedCounter(), address)
+				if err == nil {
+					input.Add(newOp)
+				}
+			}()
+			return ops, nil
+		}
+
+		// Add next instruction for fetching (as many instructions as it supports per cycle)
 		if needsWait {
 			logger.Collect(" => [FE%d][%03d]: Wait detected, no fetching more instructions this cycle", this.Index(), this.Processor().InstructionsFetchedCounter()-1)
 			// Add next instruction in a go routine as it need to be stalled
 			go func() {
-				address, _, err := this.BranchPredictor().GetNextAddress(op.Address(), instruction)
+				address, _, err := this.BranchPredictor().GetNextAddress(op.Address(), instruction, false)
 				newOp := operation.New(this.Processor().InstructionsFetchedCounter(), address)
 				if err == nil {
 					input.Add(newOp)
@@ -150,7 +164,7 @@ func (this *Fetcher) fetchInstructions(op *operation.Operation, bytes []byte, in
 			}()
 			return ops, nil
 		} else {
-			address, predicted, err := this.BranchPredictor().GetNextAddress(op.Address(), instruction)
+			address, predicted, err := this.BranchPredictor().GetNextAddress(op.Address(), instruction, false)
 			// Set current operation added to be decoded the predicted address
 			if predicted {
 				ops[len(ops)-1].SetNextPredictedAddress(address)

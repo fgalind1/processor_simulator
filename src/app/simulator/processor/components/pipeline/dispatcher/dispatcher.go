@@ -4,11 +4,14 @@ import (
 	"app/logger"
 	"app/simulator/iprocessor"
 	"app/simulator/processor/components/channel"
+	"app/simulator/processor/components/registeraliastable"
 	"app/simulator/processor/components/reorderbuffer"
 	"app/simulator/processor/components/reservationstation"
 	"app/simulator/processor/components/storagebus"
+	"app/simulator/processor/models/data"
 	"app/simulator/processor/models/info"
 	"app/simulator/processor/models/operation"
+	"app/simulator/processor/models/set"
 )
 
 type Dispatcher struct {
@@ -21,14 +24,16 @@ type dispatcher struct {
 	startOperationId               uint32
 	registers                      uint32
 	reservationStationEntries      uint32
+	reorderBufferEntries           uint32
 	instructionsDispatchedPerCycle uint32
 	instructionsWrittenPerCycle    uint32
+	registerAliasTableEntries      uint32
 	bus                            *storagebus.StorageBus
 	isActive                       bool
 }
 
 func New(index uint32, processor iprocessor.IProcessor, startOperationId, registers,
-	reservationStationEntries, instructionsDispatchedPerCycle, instructionsWrittenPerCycle uint32) *Dispatcher {
+	reservationStationEntries, reorderBufferEntries, instructionsDispatchedPerCycle, instructionsWrittenPerCycle, registerAliasTableEntries uint32) *Dispatcher {
 	return &Dispatcher{
 		&dispatcher{
 			index:                          index,
@@ -36,8 +41,10 @@ func New(index uint32, processor iprocessor.IProcessor, startOperationId, regist
 			startOperationId:               startOperationId,
 			registers:                      registers,
 			reservationStationEntries:      reservationStationEntries,
+			reorderBufferEntries:           reorderBufferEntries,
 			instructionsDispatchedPerCycle: instructionsDispatchedPerCycle,
 			instructionsWrittenPerCycle:    instructionsWrittenPerCycle,
+			registerAliasTableEntries:      registerAliasTableEntries,
 			isActive:                       true,
 		},
 	}
@@ -63,12 +70,20 @@ func (this *Dispatcher) ReservationStationEntries() uint32 {
 	return this.dispatcher.reservationStationEntries
 }
 
+func (this *Dispatcher) ReorderBufferEntries() uint32 {
+	return this.dispatcher.reorderBufferEntries
+}
+
 func (this *Dispatcher) InstructionsFetchedPerCycle() uint32 {
 	return this.dispatcher.instructionsDispatchedPerCycle
 }
 
 func (this *Dispatcher) InstructionsWrittenPerCycle() uint32 {
 	return this.dispatcher.instructionsWrittenPerCycle
+}
+
+func (this *Dispatcher) RegisterAliasTableEntries() uint32 {
+	return this.dispatcher.registerAliasTableEntries
 }
 
 func (this *Dispatcher) Bus() *storagebus.StorageBus {
@@ -84,27 +99,35 @@ func (this *Dispatcher) Close() {
 }
 
 func (this *Dispatcher) Run(input channel.Channel, output map[info.CategoryEnum]channel.Channel, commonDataBus, recoveryBus channel.Channel) {
-	// Create reservation station
-	rs := reservationstation.New(this.Index(), this.Processor(),
-		this.Registers(),
-		this.ReservationStationEntries(),
-		this.InstructionsFetchedPerCycle())
-	commonDataBusRS := channel.New(commonDataBus.Capacity())
+
+	// Create register alias table
+	rat := registeraliastable.New(this.Index(), this.RegisterAliasTableEntries())
+
 	// Create re-order buffer
 	rob := reorderbuffer.New(this.Index(),
 		this.Processor(),
 		this.StartOperationId(),
-		this.ReservationStationEntries(),
-		this.InstructionsWrittenPerCycle())
+		this.ReorderBufferEntries(),
+		this.InstructionsWrittenPerCycle(),
+		rat)
 	commonDataBusROB := channel.New(commonDataBus.Capacity())
+
+	// Create reservation station
+	rs := reservationstation.New(this.Index(), this.Processor(),
+		this.Registers(),
+		this.ReservationStationEntries(),
+		this.InstructionsFetchedPerCycle(),
+		rat, rob.Bus())
+	commonDataBusRS := channel.New(commonDataBus.Capacity())
+
 	// Create storage bus
-	this.dispatcher.bus = this.getStorageBus(rob)
+	this.dispatcher.bus = rob.Bus()
 
 	// Launch each unit as a goroutine
 	logger.Print(" => Initializing dispatcher unit %d", this.Index())
 
 	// Start dispatcher of operations to be executed into reservation station
-	go this.runDispatcherToReservationStation(input, rs)
+	go this.runDispatcherToReservationStation(input, rs, rat, rob)
 	// Start common bus multiplexer to send ack to reservation station and reorder buffer
 	go this.runCommonBusMultiplexer(commonDataBus, commonDataBusRS, commonDataBusROB)
 
@@ -114,7 +137,9 @@ func (this *Dispatcher) Run(input channel.Channel, output map[info.CategoryEnum]
 	rob.Run(commonDataBusROB, recoveryBus)
 }
 
-func (this *Dispatcher) runDispatcherToReservationStation(input channel.Channel, rs *reservationstation.ReservationStation) {
+func (this *Dispatcher) runDispatcherToReservationStation(input channel.Channel,
+	rs *reservationstation.ReservationStation, rat *registeraliastable.RegisterAliasTable, rob *reorderbuffer.ReorderBuffer) {
+
 	incomingQueue := map[uint32]*operation.Operation{}
 	currentOperationId := this.StartOperationId()
 
@@ -132,6 +157,26 @@ func (this *Dispatcher) runDispatcherToReservationStation(input channel.Channel,
 
 		// Send to incoming channel pending ops (if available)
 		for op, exists := incomingQueue[currentOperationId]; exists; op, exists = incomingQueue[currentOperationId] {
+
+			// Allocate in ROB if there is spacde, otherwise stall
+			rob.Allocate(op)
+
+			// Rename register in case of WAR & WAR hazards
+			if this.RegisterAliasTableEntries() > 0 {
+				_, destRegister := rs.GetDestinationDependency(op.Id(), op.Instruction())
+				if destRegister != -1 {
+					found, _ := rat.AddMap(uint32(destRegister), op.Id())
+					if !found {
+						// Need to stall for an available RAT entry
+						logger.Collect(" => [DI%d][%03d]: No entry available in RAT. Wait for one...", this.Index(), op.Id())
+						break
+					}
+
+					// Rename to physical registers
+					this.renameRegisters(op.Id(), op, rat)
+				}
+			}
+
 			//Redirect input operations to the required execution unit channels
 			logger.Collect(" => [DI%d][%03d]: Scheduling to RS: %s, %s", this.Index(), op.Id(), op.Instruction().Info.ToString(), op.Instruction().Data.ToString())
 			rs.Schedule(op)
@@ -157,35 +202,21 @@ func (this *Dispatcher) runCommonBusMultiplexer(input, output1, output2 channel.
 	}
 }
 
-func (this *Dispatcher) getStorageBus(rob *reorderbuffer.ReorderBuffer) *storagebus.StorageBus {
+func (this *Dispatcher) renameRegisters(operationId uint32, op *operation.Operation, rat *registeraliastable.RegisterAliasTable) {
 
-	return &storagebus.StorageBus{
-
-		// Registers handlers
-		LoadRegister: func(index uint32) uint32 {
-			return rob.LoadRegister(index)
-		},
-		StoreRegister: func(op *operation.Operation, index, value uint32) {
-			rob.StoreRegister(op, index, value)
-		},
-
-		// Data Memory handlers
-		LoadData: func(address uint32) uint32 {
-			return rob.LoadData(address)
-		},
-		StoreData: func(op *operation.Operation, address, value uint32) {
-			rob.StoreData(op, address, value)
-		},
-
-		// Program Counter handlers
-		IncrementProgramCounter: func(op *operation.Operation, value int32) {
-			rob.IncrementProgramCounter(op, value)
-		},
-		SetProgramCounter: func(op *operation.Operation, value uint32) {
-			rob.SetProgramCounter(op, value)
-		},
-
-		// Branch Predictor
-		SetBranchResult: this.Processor().SetBranchResult,
+	if op.Instruction().Info.Type == data.TypeI {
+		data := op.Instruction().Data.(*data.DataI)
+		if !op.Instruction().Info.IsBranch() {
+			opcode := op.Instruction().Info.Opcode
+			if opcode != set.OP_SW && opcode != set.OP_SLI && opcode != set.OP_SUI {
+				reg, _ := rat.GetPhysicalRegister(operationId, data.RegisterD.ToUint32())
+				op.SetRenamedDestRegister(reg)
+			}
+		}
+		op.Instruction().Data = data
+	} else if op.Instruction().Info.Type == data.TypeR {
+		data := op.Instruction().Data.(*data.DataR)
+		reg, _ := rat.GetPhysicalRegister(operationId, data.RegisterD.ToUint32())
+		op.SetRenamedDestRegister(reg)
 	}
 }

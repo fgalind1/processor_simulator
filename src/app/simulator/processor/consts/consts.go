@@ -28,6 +28,7 @@ const (
 	DISPATCH_EVENT   = "DI"
 	EXECUTE_EVENT    = "EX"
 	ALU_EVENT        = "AL"
+	FPU_EVENT        = "FP"
 	LOAD_STORE_EVENT = "LS"
 	BRANCH_EVENT     = "BR"
 	WRITEBACK_EVENT  = "WB"

@@ -37,7 +37,7 @@ func getDataJFromParts(parts ...uint32) (*DataJ, error) {
 
 	// check length of parts and set parts into the right operands
 	if len(parts) != 2 {
-		return nil, errors.New(fmt.Sprintf("Data I expecting 3 or 4 parts and got %d", len(parts)))
+		return nil, errors.New(fmt.Sprintf("Data J expecting 2 parts and got %d", len(parts)))
 	}
 
 	return &DataJ{

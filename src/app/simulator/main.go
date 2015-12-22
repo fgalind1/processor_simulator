@@ -18,10 +18,11 @@ import (
 func main() {
 	app := cli.NewApp()
 	app.Name = "Superscalar Processor Simulator"
-	app.Usage = "University of Bristol"
+	app.Usage = "University of Bristol\n   Repository: https://github.com/felipegs01/processor_simulator"
 	app.HelpName = "simulator"
 	app.Author = "Felipe Galindo Sanchez"
 	app.Email = "felipegs01@gmail.com"
+	app.Version = "1.0"
 	app.Commands = []cli.Command{
 		{
 			Name:        "run",
@@ -49,7 +50,7 @@ func main() {
 				},
 				cli.IntFlag{
 					Name:  "max-cycles",
-					Value: -1,
+					Value: 3000,
 					Usage: "Maximum number of cycles to execute",
 				},
 			},

@@ -30,7 +30,12 @@ func TranslateFromFile(filename string, outputFilename string) (string, error) {
 	defer f.Close()
 
 	// Clean lines, remove labels and get map of labels
-	lines, labels := getLinesAndMapLabels(lines)
+	memory, lines, labels := getLinesAndMapLabels(lines)
+
+	// Print pre-filled memory macros
+	for _, line := range memory {
+		f.WriteString(fmt.Sprintf("%s\n", line))
+	}
 
 	// Translate instructions
 	instructionSet := set.Init()
@@ -46,13 +51,20 @@ func TranslateFromFile(filename string, outputFilename string) (string, error) {
 	return outputFilename, nil
 }
 
-func getLinesAndMapLabels(lines []string) ([]string, map[string]uint32) {
+func getLinesAndMapLabels(lines []string) ([]string, []string, map[string]uint32) {
+	memory := []string{}
 	cleanLines := []string{}
 	labels := map[string]uint32{}
 	address := uint32(0)
 	for _, line := range lines {
 		// Remove comments in the right
 		line = strings.Split(line, ";")[0]
+
+		if strings.Contains(line, "@0x") {
+			memory = append(memory, line)
+			continue
+		}
+
 		// Check if line is only a comment or an empty line
 		line = strings.TrimSpace(line)
 		if len(line) == 0 || line[0:1] == ";" {
@@ -66,7 +78,7 @@ func getLinesAndMapLabels(lines []string) ([]string, map[string]uint32) {
 			address += consts.BYTES_PER_WORD
 		}
 	}
-	return cleanLines, labels
+	return memory, cleanLines, labels
 }
 
 func getOutputFilename(filename string) string {

@@ -39,9 +39,10 @@ func (this *Processor) StartPipelineUnits(config *config.Config, recoveryChannel
 	instructionChannel := channel.New(config.InstructionsQueue())       // Fetch -> Decode
 	operationChannel := channel.New(config.InstructionsDecodedQueue())  // Decode -> Dispatch
 	executionChannels := map[info.CategoryEnum]channel.Channel{         // Dispatch -> Execute
-		info.Aritmetic: channel.New(config.AluUnits()),
-		info.LoadStore: channel.New(config.LoadStoreUnits()),
-		info.Control:   channel.New(config.BranchUnits()),
+		info.Aritmetic:     channel.New(config.AluUnits()),
+		info.LoadStore:     channel.New(config.LoadStoreUnits()),
+		info.Control:       channel.New(config.BranchUnits()),
+		info.FloatingPoint: channel.New(config.FpuUnits()),
 	}
 	commonDataBusChannel := channel.New(channel.INFINITE) // Execute -> Dispatcher (RS & ROB)
 
@@ -66,7 +67,8 @@ func (this *Processor) StartPipelineUnits(config *config.Config, recoveryChannel
 
 	// ----- Dispatch / RS / ROB ---- //
 	di := dispatcher.New(uint32(0), this, operationId, config.TotalRegisters(),
-		config.ReservationStationEntries(), config.InstructionsDispatchedPerCycle(), config.InstructionsWrittenPerCycle())
+		config.ReservationStationEntries(), config.ReorderBufferEntries(), config.InstructionsDispatchedPerCycle(),
+		config.InstructionsWrittenPerCycle(), config.RegisterAliasTableEntries())
 	di.Run(operationChannel, executionChannels, commonDataBusChannel, recoveryChannel)
 	closeUnitsHandlers = append(closeUnitsHandlers, di.Close)
 
@@ -91,6 +93,13 @@ func (this *Processor) StartPipelineUnits(config *config.Config, recoveryChannel
 		closeUnitsHandlers = append(closeUnitsHandlers, ex.Close)
 	}
 
+	// ------- Execute (FPU) -------- //
+	for index := uint32(0); index < config.FpuUnits(); index++ {
+		ex := executor.New(index, this, di.Bus(), info.FloatingPoint)
+		ex.Run(executionChannels, commonDataBusChannel)
+		closeUnitsHandlers = append(closeUnitsHandlers, ex.Close)
+	}
+
 	// Set instruction for fetching to start pipeline
 	go addressChannel.Add(operation.New(operationId, address))
 
@@ -108,6 +117,7 @@ func (this *Processor) StartPipelineUnits(config *config.Config, recoveryChannel
 		executionChannels[info.Aritmetic].Close()
 		executionChannels[info.LoadStore].Close()
 		executionChannels[info.Control].Close()
+		executionChannels[info.FloatingPoint].Close()
 		commonDataBusChannel.Close()
 	}
 }
@@ -122,6 +132,8 @@ func (this *Processor) RunRecovery(recoveryChannel channel.Channel, flushFunc fu
 		flushFunc()
 		// Clean logs
 		this.RemoveForwardLogs(op.Id() - 1)
+		// Clear speculative jumps
+		this.ClearSpeculativeJumps()
 		// Start pipeline from the recovery address
 		flushFunc = this.StartPipelineUnits(this.Config(), recoveryChannel, op.Id(), op.Address())
 		// Release value from channel

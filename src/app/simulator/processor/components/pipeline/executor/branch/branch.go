@@ -37,7 +37,7 @@ func ComputeAddressTypeJ(operands data.Data) uint32 {
 	return operands.(*data.DataJ).Address.ToUint32() << 2
 }
 
-func (this *Branch) Process(operation *operation.Operation) error {
+func (this *Branch) Process(operation *operation.Operation) (*operation.Operation, error) {
 	instruction := operation.Instruction()
 	info := instruction.Info
 	operands := instruction.Data
@@ -45,22 +45,22 @@ func (this *Branch) Process(operation *operation.Operation) error {
 	switch info.Type {
 	case data.TypeI:
 		registerD := operands.(*data.DataI).RegisterD.ToUint32()
-		op1 := this.Bus().LoadRegister(registerD)
+		op1 := this.Bus().LoadRegister(operation, registerD)
 		registerS := operands.(*data.DataI).RegisterS.ToUint32()
-		op2 := this.Bus().LoadRegister(registerS)
-		logger.Collect(" => [E][%03d]: [R%d(%#02X) = %#08X ? R%d(%#02X) = %#08X]",
+		op2 := this.Bus().LoadRegister(operation, registerS)
+		logger.Collect(" => [BR][%03d]: [R%d(%#02X) = %#08X ? R%d(%#02X) = %#08X]",
 			operation.Id(), registerD, registerD*consts.BYTES_PER_WORD, op1, registerS, registerS*consts.BYTES_PER_WORD, op2)
 
 		taken, err := processOperation(op1, op2, info.Opcode)
 		if err != nil {
-			return err
+			return operation, nil
 		}
-		this.Bus().SetBranchResult(operation.Address(), taken)
+		operation.SetBranchResult(taken)
 
 		if taken {
 			offsetAddress := ComputeOffsetTypeI(operands)
 			this.Bus().IncrementProgramCounter(operation, offsetAddress)
-			logger.Collect(" => [E][%03d]: [PC(offset) = 0x%06X", operation.Id(), offsetAddress)
+			logger.Collect(" => [BR][%03d]: [PC(offset) = 0x%06X", operation.Id(), offsetAddress)
 		} else {
 			// Notify ROB
 			this.Bus().IncrementProgramCounter(operation, 0)
@@ -68,11 +68,11 @@ func (this *Branch) Process(operation *operation.Operation) error {
 	case data.TypeJ:
 		address := ComputeAddressTypeJ(operands)
 		this.Bus().SetProgramCounter(operation, uint32(address-consts.BYTES_PER_WORD))
-		logger.Collect(" => [E][%03d]: [Address = %06X]", operation.Id(), address)
+		logger.Collect(" => [BR][%03d]: [Address = %06X]", operation.Id(), address)
 	default:
-		return errors.New(fmt.Sprintf("Invalid data type to process by Branch unit. Type: %d", info.Type))
+		return operation, errors.New(fmt.Sprintf("Invalid data type to process by Branch unit. Type: %d", info.Type))
 	}
-	return nil
+	return operation, nil
 }
 
 func processOperation(registerD uint32, registerS uint32, opcode uint8) (bool, error) {

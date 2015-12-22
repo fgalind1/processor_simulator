@@ -18,12 +18,13 @@ type IProcessor interface {
 	InstructionsFetchedCounter() uint32
 	InstructionsCompleted() []uint32
 	InstructionsCompletedCounter() uint32
+	LastOperationIdCompleted() uint32
 	LogInstructionFetched(address uint32)
 	LogInstructionCompleted(operationId uint32)
 	LogEvent(unit string, index uint32, operationId uint32, start uint32)
 	LogEventStart(unit string, index uint32, operationId uint32)
 	LogEventFinish(unit string, index uint32, operationId uint32)
-	LogBranchInstruction(conditionalBranch, mispredicted bool)
+	LogBranchInstruction(address uint32, conditionalBranch, mispredicted bool, taken bool)
 	RemoveForwardLogs(operationId uint32)
 	ReachedEnd(bytes []byte) bool
 
@@ -39,8 +40,12 @@ type IProcessor interface {
 	ProgramCounter() uint32
 	SetProgramCounter(value uint32)
 	IncrementProgramCounter(offset int32)
-	GetGuessByAddress(address uint32) bool
-	SetBranchResult(address uint32, taken bool)
+	SetPredictorBits(bits uint32)
+	GetBranchStateByAddress(address uint32) (uint32, bool)
+	SpeculativeJumps() uint32
+	AddSpeculativeJump()
+	DecrementSpeculativeJump()
+	ClearSpeculativeJumps()
 
 	///////////////////////////
 	//       Clock           //

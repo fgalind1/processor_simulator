@@ -9,6 +9,7 @@ import (
 	"app/simulator/processor/components/channel"
 	"app/simulator/processor/components/pipeline/executor/alu"
 	"app/simulator/processor/components/pipeline/executor/branch"
+	"app/simulator/processor/components/pipeline/executor/fpu"
 	"app/simulator/processor/components/pipeline/executor/loadstore"
 	"app/simulator/processor/components/storagebus"
 	"app/simulator/processor/consts"
@@ -76,8 +77,12 @@ func (this *Executor) Run(input map[info.CategoryEnum]channel.Channel, commonDat
 				return
 			}
 			op := operation.Cast(value)
+			for i := uint8(0); i < op.Instruction().Info.Cycles; i++ {
+				this.Processor().Wait(1)
+			}
+
 			// Iterate instructions received via the channel
-			this.executeOperation(unit, event, op)
+			op, _ = this.executeOperation(unit, event, op)
 			// Send data to common bus for reservation station feedback
 			commonDataBus.Add(op)
 			// Release one item from input Channel
@@ -94,17 +99,20 @@ func (this *Executor) getUnitFromCategory(category info.CategoryEnum) (IExecutor
 		return loadstore.New(this.Bus()), consts.LOAD_STORE_EVENT
 	case info.Control:
 		return branch.New(this.Bus()), consts.BRANCH_EVENT
+	case info.FloatingPoint:
+		return fpu.New(this.Bus()), consts.FPU_EVENT
 	}
 	return nil, ""
 }
 
-func (this *Executor) executeOperation(unit IExecutor, event string, op *operation.Operation) error {
+func (this *Executor) executeOperation(unit IExecutor, event string, op *operation.Operation) (*operation.Operation, error) {
 	startCycles := this.Processor().Cycles()
 
 	// Do decode once a data instruction is received
-	err := unit.Process(op)
+	var err error
+	op, err = unit.Process(op)
 	if err != nil {
-		return errors.New(fmt.Sprintf("Failed executing instruction. %s]", err.Error()))
+		return op, errors.New(fmt.Sprintf("Failed executing instruction. %s]", err.Error()))
 	}
 	// Wait cycles of a execution stage
 	logger.Collect(" => [%s%d][%03d]: Executing %s, %s", event, this.Index(), op.Id(), op.Instruction().Info.ToString(), op.Instruction().Data.ToString())
@@ -115,5 +123,5 @@ func (this *Executor) executeOperation(unit IExecutor, event string, op *operati
 	if this.IsActive() {
 		this.Processor().LogEvent(event, this.Index(), op.Id(), startCycles)
 	}
-	return nil
+	return op, nil
 }

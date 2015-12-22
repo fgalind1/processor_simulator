@@ -40,13 +40,6 @@ build: fmt
 	@echo "Building app..."
 	@$(GO) build -o $(APP_DIR)/$(APP_BIN)/$(TOOL_NAME).exe $(PACKAGE_NAME)
 
-benchmark:
-	@echo "Cleaning benchmark results..."
-	@rm -rf $(APP_DIR)/$(BENCHMARK_SRC) 
-
-	@echo "Running benchmark tests..."
-	exec $(APP_DIR)/benchmark.sh
-
 test: build
 	@echo "Testing app..."
 	@$(GO) test $(PACKAGE_NAME)...

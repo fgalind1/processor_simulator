@@ -9,9 +9,10 @@ import (
 type CategoryEnum string
 
 const (
-	Aritmetic CategoryEnum = "Artitmetic"
-	LoadStore CategoryEnum = "Load Store"
-	Control   CategoryEnum = "Control"
+	Aritmetic     CategoryEnum = "Artitmetic"
+	LoadStore     CategoryEnum = "Load Store"
+	Control       CategoryEnum = "Control"
+	FloatingPoint CategoryEnum = "Floating-Point"
 )
 
 type Info struct {

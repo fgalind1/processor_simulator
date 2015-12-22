@@ -34,8 +34,10 @@ func (this *Processor) Stats() string {
 	stats += fmt.Sprintf(" => Conditional Branches: %d\n", this.processor.conditionalBranches)
 	stats += fmt.Sprintf(" => Unconditional Branches: %d\n", this.processor.unconditionalBranches)
 	if this.Config().BranchPredictorType() != config.StallPredictor {
+		stats += fmt.Sprintf(" => Taken Unconditional Branches: %d\n", this.processor.conditionalBranches-this.processor.noTakenBranches)
+		stats += fmt.Sprintf(" => No Taken Unconditional Branches: %d\n", this.processor.noTakenBranches)
 		stats += fmt.Sprintf(" => Mispredicted Branches: %d\n", this.processor.mispredictedBranches)
-		stats += fmt.Sprintf(" => Misprediction Percentage: %3.2f\n", 100*float32(this.processor.mispredictedBranches)/float32(totalBranches))
+		stats += fmt.Sprintf(" => Misprediction Percentage (Conditional): %3.2f\n", 100*float32(this.processor.mispredictedBranches)/float32(this.processor.conditionalBranches))
 	}
 	return stats
 }

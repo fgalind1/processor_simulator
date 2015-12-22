@@ -54,6 +54,15 @@ func (this *Memory) StoreUint32(address uint32, value uint32) {
 	this.memory.data[address+0] = byte((value & 0x000000FF) >> 0)
 }
 
+func (this *Memory) Clone() *Memory {
+	return &Memory{
+		&memory{
+			size: this.memory.size,
+			data: this.memory.data,
+		},
+	}
+}
+
 func (this *Memory) ToString() string {
 	str := "\t   0x00\t\t   0x04\t\t   0x08\t\t   0x0C\n"
 	for i := uint32(0); i < this.Size(); i += 16 {

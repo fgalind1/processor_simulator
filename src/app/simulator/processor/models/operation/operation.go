@@ -9,19 +9,23 @@ type Operation struct {
 }
 
 type operation struct {
-	id               uint32
-	address          uint32
-	word             []byte
-	instruction      *instruction.Instruction
-	predictedAddress int32
+	id                  uint32
+	address             uint32
+	word                []byte
+	instruction         *instruction.Instruction
+	renamedDestRegister int32
+	predictedAddress    int32
+	taken               bool
 }
 
 func New(id uint32, address uint32) *Operation {
 	return &Operation{
 		&operation{
-			id:               id,
-			address:          address,
-			predictedAddress: -1,
+			id:                  id,
+			address:             address,
+			predictedAddress:    -1,
+			taken:               false,
+			renamedDestRegister: -1,
 		},
 	}
 }
@@ -46,6 +50,14 @@ func (this *Operation) Instruction() *instruction.Instruction {
 	return this.operation.instruction
 }
 
+func (this *Operation) Taken() bool {
+	return this.operation.taken
+}
+
+func (this *Operation) RenamedDestRegister() int32 {
+	return this.operation.renamedDestRegister
+}
+
 func (this *Operation) PredictedAddress() int32 {
 	return this.operation.predictedAddress
 }
@@ -60,4 +72,12 @@ func (this *Operation) SetInstruction(instruction *instruction.Instruction) {
 
 func (this *Operation) SetNextPredictedAddress(address uint32) {
 	this.operation.predictedAddress = int32(address)
+}
+
+func (this *Operation) SetBranchResult(taken bool) {
+	this.operation.taken = taken
+}
+
+func (this *Operation) SetRenamedDestRegister(register uint32) {
+	this.operation.renamedDestRegister = int32(register)
 }
