@@ -303,3 +303,98 @@ bne  Rd,Rs,C   | br on not equal |  I   | PC = PC + 4 + 4*C    |
 blt  Rd,Rs,C   | br on less      |  I   | PC = PC + 4 + 4*C    |
 bgt  Rd,Rs,C   | br on greater   |  I   | PC = PC + 4 + 4*C    |
 j    C         | jump to C       |  J   | PC = 4*C             |
+
+ Type | Format (32 bits)||
+ -----|------------|----||
+  J   | Opcode (6) | - - - - - - - - - - A d d r e s s (2 6 b i t s ) - - - - - - - - - - |
+
+   - All instructions are `32-bit` long (`1 word`)
+   - `Rs`, `Rt`, and `Rd` are general purpose registers
+   - `PC` stands for the program counter address
+   - `C` denotes a constant (immediate)
+   - `-` denotes that those values do not care
+
+#### List of Instructions
+
+##### Aritmetic/Logic
+ - From Opcode **00**0000 to **00**1111
+<<<<<<< HEAD
+=======
+
+- ALU 
+    Syntax          |  Description   | Type |
+--------------------|----------------|------|
+add/addi   Rd,Rs,Rt | Rd = Rs + Rt/C |  R   |
+sub/subi   Rd,Rs,Rt | Rd = Rs - Rt/C |  R   |
+cmp   Rd,Rs,Rt      | Rd = Rs <=> Rt |  R   |
+mul   Rd,Rs,Rt      | Rd = Rs * Rt   |  R   |
+shl/shli   Rd,Rs,Rt | Rd = Rs << Rt/C|  R   |
+shr/shrl   Rd,Rs,Rt | Rd = Rs >> Rt/C|  R   |
+and/andi   Rd,Rs,Rt | Rd = Rs & Rt/C |  R   |
+or/ori     Rd,Rs,Rt | Rd = Rs | Rt/C |  R   |
+
+- FPU 
+    Syntax      |  Description | Type |
+----------------|--------------|------|
+fadd   Rd,Rs,Rt | Rd = Rs + Rt |  R   |
+fsub   Rd,Rs,Rt | Rd = Rs - Rt |  R   |
+fmul   Rd,Rs,Rt | Rd = Rs * Rt |  R   |
+fdiv   Rd,Rs,Rt | Rd = Rs / Rt |  R   |
+>>>>>>> 1748861158eea231faade5a2f959e116161b73e6
+
+- ALU 
+
+<<<<<<< HEAD
+    Syntax          |  Description    | Type |
+--------------------|-----------------|------|
+add/addi   Rd,Rs,Rt | Rd = Rs + Rt/C  |  R   |
+sub/subi   Rd,Rs,Rt | Rd = Rs - Rt/C  |  R   |
+cmp        Rd,Rs,Rt | Rd = Rs <=> Rt  |  R   |
+mul        Rd,Rs,Rt | Rd = Rs * Rt    |  R   |
+shl/shli   Rd,Rs,Rt | Rd = Rs << Rt/C |  R   |
+shr/shrl   Rd,Rs,Rt | Rd = Rs >> Rt/C |  R   |
+and/andi   Rd,Rs,Rt | Rd = Rs & Rt/C  |  R   |
+or/ori     Rd,Rs,Rt | Rd = Rs | Rt/C  |  R   |
+
+- FPU 
+
+    Syntax      |  Description | Type |
+----------------|--------------|------|
+fadd   Rd,Rs,Rt | Rd = Rs + Rt |  R   |
+fsub   Rd,Rs,Rt | Rd = Rs - Rt |  R   |
+fmul   Rd,Rs,Rt | Rd = Rs * Rt |  R   |
+fdiv   Rd,Rs,Rt | Rd = Rs / Rt |  R   |
+
+##### Data Transfer
+ - From Opcode **01**0000 to **01**1111
+
+    Syntax     |  Description   | Type |         Notes           |
+---------------|----------------|------|-------------------------|
+lw    Rd,Rs,C  | Rd = M[Rs + C] |  I   | load M[Rs + C] into Rd  |
+sw    Rd,Rs,C  | M[Rd + C] = Rs |  I   | store Rd into M[Rs + C] |
+lli   Rd,C     | Rd = C         |  I   | load lower immediate    |
+sli   Rd,C     | M[Rd] = C      |  I   | store lower immediate   |
+lui   Rd,C     | Rd = C << 16   |  I   | load upper immediate    |
+sui   Rd,C     | M[Rd] = C << 16|  I   | store upper immediate   |
+
+=======
+    Syntax     |  Description   | Type |         Notes           |
+---------------|----------------|------|-------------------------|
+lw    Rd,Rs,C  | Rd = M[Rs + C] |  I   | load M[Rs + C] into Rd  |
+sw    Rd,Rs,C  | M[Rd + C] = Rs |  I   | store Rd into M[Rs + C] |
+lli   Rd,C     | Rd = C         |  I   | load lower immediate    |
+sli   Rd,C     | M[Rd] = C      |  I   | store lower immediate   |
+lui   Rd,C     | Rd = C << 16   |  I   | load upper immediate    |
+sui   Rd,C     | M[Rd] = C << 16|  I   | store upper immediate   |
+
+>>>>>>> 1748861158eea231faade5a2f959e116161b73e6
+##### Control-Flow 
+ - From Opcode **10**0000 to **10**1111
+ 
+    Syntax     |   Description   | Type |          Notes       |
+---------------|-----------------|------|----------------------|
+beq  Rd,Rs,C   | br on equal     |  I   | PC = PC + 4 + 4*C    |
+bne  Rd,Rs,C   | br on not equal |  I   | PC = PC + 4 + 4*C    |
+blt  Rd,Rs,C   | br on less      |  I   | PC = PC + 4 + 4*C    |
+bgt  Rd,Rs,C   | br on greater   |  I   | PC = PC + 4 + 4*C    |
+j    C         | jump to C       |  J   | PC = 4*C             |
