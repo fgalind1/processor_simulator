@@ -46,7 +46,7 @@ func main() {
 				cli.StringFlag{
 					Name:  "c, config-filename",
 					Value: "",
-					Usage: "Processor config filename, if not provided a deafult config will be provided",
+					Usage: "Processor config filename, a valid config filename is required",
 				},
 				cli.IntFlag{
 					Name:  "max-cycles",
