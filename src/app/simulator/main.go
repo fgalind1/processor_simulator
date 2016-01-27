@@ -156,23 +156,23 @@ func runInteractiveStep(p *processor.Processor) bool {
 	time.Sleep(consts.MENU_DELAY)
 
 	// Display menu
-	logger.Print("Press the desired key and then hit [ENTER]...")
-	logger.Print(" - (R) to see registers memory")
-	logger.Print(" - (D) to see data memory")
-	logger.Print(" - (E) to exit and quit")
-	logger.Print(" - (*) Any other key to continue...")
-	fmt.Print("Option: ")
+	fmt.Println("Press the desired key and then hit [ENTER]...")
+	fmt.Println(" - (R) to see registers memory")
+	fmt.Println(" - (D) to see data memory")
+	fmt.Println(" - (E) to exit and quit")
+	fmt.Println(" - (*) Any other key to continue...")
+	fmt.Println("Option: ")
 
 	var option string
 	fmt.Scan(&option)
 
 	switch option {
 	case "R", "r":
-		logger.Print(p.RegistersMemory().ToString())
-		logger.Print("--------------------------------------------")
+		fmt.Println(p.RegistersMemory().ToString())
+		fmt.Println("--------------------------------------------")
 	case "D", "d":
-		logger.Print(p.DataMemory().ToString())
-		logger.Print("--------------------------------------------")
+		fmt.Println(p.DataMemory().ToString())
+		fmt.Println("--------------------------------------------")
 	case "E", "e":
 		os.Exit(0)
 	default:
